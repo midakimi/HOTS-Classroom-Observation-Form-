@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ระบบบันทึกผลการนิเทศ HOTS</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--tx:#1b2433;--mu:#64708a;--bd:#dde3ee;--pr:#2f5bd6;--pt:#fff;--ok:#1f9d6b;--wn:#d98a0b;--er:#d64545;--soft:#eaf0ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141c;--card:#1a2130;--tx:#e8ecf5;--mu:#98a3bb;--bd:#2c3649;--pr:#6f93ff;--pt:#0b1020;--soft:#243050}}
+:root[data-theme="dark"]{--bg:#10141c;--card:#1a2130;--tx:#e8ecf5;--mu:#98a3bb;--bd:#2c3649;--pr:#6f93ff;--pt:#0b1020;--soft:#243050}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 Sarabun,"Noto Sans Thai",sans-serif}
+header{background:var(--pr);color:var(--pt);padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+header h1{font-size:18px;margin:0}header small{opacity:.85}
+nav{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:5}
+nav button{white-space:nowrap}
+main{max-width:980px;margin:0 auto;padding:0 12px 60px}
+button,input,select,textarea{font:inherit;color:var(--tx)}
+button{border:1px solid var(--bd);background:var(--card);padding:7px 13px;border-radius:9px;cursor:pointer}
+button.on,button.pri{background:var(--pr);color:var(--pt);border-color:var(--pr)}
+button.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin:10px 0}
+.card h2{font-size:16px;margin:0 0 8px}.mu{color:var(--mu);font-size:13px}
+.g{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+label{display:block;font-size:13px;color:var(--mu)}
+input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)}
+textarea{min-height:70px}
+.it{padding:9px 0;border-top:1px solid var(--bd)}.it:first-of-type{border-top:0}
+.sc{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}.sc button{min-width:44px}
+.sc button.on{background:var(--pr)}
+.tl{display:flex;align-items:center;gap:8px;margin:6px 0}.tl b{min-width:34px;text-align:center;font-size:18px}
+.bar{height:16px;background:var(--soft);border-radius:8px;overflow:hidden;flex:1}.bar i{display:block;height:100%;background:var(--pr)}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:13px}.row span:first-child{width:46%}.row b{width:44px;text-align:right}
+.kpi{text-align:center}.kpi b{font-size:26px;display:block;color:var(--pr)}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;background:var(--soft)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid var(--bd);padding:6px;text-align:left}
+.sw{overflow-x:auto}.hide{display:none}
+#rep{background:#fff;color:#111;padding:18px;border-radius:10px;border:1px solid var(--bd)}
+#rep .bar{background:#e6ebf5}#rep .bar i{background:#2f5bd6}#rep table td,#rep table th{border-color:#ccc}
+@media print{header,nav,.np{display:none!important}body[data-v=list] .card:not(#repw){display:none!important}body{background:#fff}#rep{border:0;padding:0}main{padding:0}}
+</style></head><body>
+<header><div><h1>🎓 ระบบบันทึกผลการนิเทศการสอน · พัฒนาทักษะการคิดขั้นสูง (HOTS)</h1><small id="st">กำลังเชื่อมต่อ…</small></div></header>
+<nav id="nav"></nav>
+<main id="app"></main>
+<script>
+const TOOLS=[
+{k:'A',n:'เครื่องมือ 1: การออกแบบและจัดกิจกรรมเพื่อ HOTS',it:['เป้าหมายการเรียนรู้ระบุระดับการคิดขั้นสูง (วิเคราะห์/ประเมิน/สร้างสรรค์)','กิจกรรมใช้สถานการณ์/ปัญหาจริงให้นักเรียนคิดวิเคราะห์','ให้นักเรียนลงมือปฏิบัติ สืบค้น หรือทดลองด้วยตนเอง','มีกิจกรรมกลุ่ม/ร่วมมือที่ทุกคนมีบทบาทชัดเจน','ใช้สื่อ/เทคโนโลยีสนับสนุนการคิดและสร้างสรรค์ชิ้นงาน','ขั้นตอนการสอนเชื่อมโยงความรู้เดิมสู่ความรู้ใหม่','จัดการเวลาให้นักเรียนมีเวลาคิดอย่างเพียงพอ','ปิดบทเรียนด้วยการสรุป/สะท้อนคิดของนักเรียน']},
+{k:'B',n:'เครื่องมือ 2: คำถามและการกระตุ้นความคิด',it:['ใช้คำถามปลายเปิดที่มีได้หลายคำตอบ','ถามต่อเนื่อง “เพราะอะไร/มีหลักฐานอะไร”','รอคอยคำตอบ (Wait time) ≥ 3 วินาที','ไม่ตัดสินคำตอบทันที เปิดโอกาสให้เพื่อนโต้แย้ง/เสริม','กระตุ้นให้นักเรียนตั้งคำถามเอง','ปรับระดับคำถามให้ท้าทายตามศักยภาพผู้เรียน']},
+{k:'C',n:'เครื่องมือ 3: พฤติกรรมการคิดขั้นสูงของนักเรียน',it:['วิเคราะห์ จำแนก เปรียบเทียบข้อมูลได้','ประเมินข้อมูล ให้เหตุผล ตัดสินใจโดยมีหลักฐาน','สร้างสรรค์ความคิด/ชิ้นงานใหม่ ไม่ซ้ำแบบเดิม','แก้ปัญหาอย่างเป็นขั้นตอนและทดลองหลายแนวทาง','อภิปราย โต้แย้ง และรับฟังความเห็นต่าง','เชื่อมโยงความรู้สู่ชีวิตจริง/ข้ามสาระ','สะท้อนคิดกระบวนการเรียนรู้ของตนเอง','นักเรียนมีส่วนร่วมอย่างทั่วถึง (≥ 80%)']},
+{k:'D',n:'เครื่องมือ 4: การวัดประเมินผลและข้อมูลย้อนกลับ',it:['ใช้การประเมินตามสภาพจริง/ชิ้นงาน/Rubric','เกณฑ์การประเมินแจ้งนักเรียนชัดเจน','ให้ข้อมูลย้อนกลับที่ชี้แนะทางพัฒนา','เปิดโอกาสประเมินตนเองและเพื่อน']}];
+const LV=['ไม่พบ','พบน้อย','พบบ่อย','พบสม่ำเสมอ'];
+const BL=['จำ','เข้าใจ','ประยุกต์','วิเคราะห์','ประเมินค่า','สร้างสรรค์'];
+const TY=[['wait','ครั้งที่ครูรอคอยคำตอบ ≥ 3 วินาที'],['sq','นักเรียนตั้งคำถามเอง'],['sr','นักเรียนตอบพร้อมให้เหตุผล/หลักฐาน'],['grp','ครั้งที่นักเรียนทำงานกลุ่ม/อภิปรายคู่']];
+const $=s=>document.querySelector(s);const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let DB=null,col=null,recs=[],view='form',cur=blank(),sel=null,teacherQ='';
+function blank(){return{id:'o'+Date.now().toString(36),date:new Date().toISOString().slice(0,10),teacher:'',school:'',subject:'',grade:'',topic:'',observer:'',r:{},bl:[0,0,0,0,0,0],ty:{wait:0,sq:0,sr:0,grp:0},str:'',imp:'',act:'',ret:false,note:''}}
+function lsGet(){try{return JSON.parse(localStorage.getItem('sup')||'[]')}catch(e){return[]}}
+function lsSet(){try{localStorage.setItem('sup',JSON.stringify(recs))}catch(e){}}
+/* ---- คำนวณ ---- */
+function calc(r){const t={};let all=[];TOOLS.forEach(T=>{const v=T.it.map((_,i)=>+r.r[T.k+i]||0).filter(x=>x>0);t[T.k]={m:v.length?v.reduce((a,b)=>a+b)/v.length:0,done:v.length,tot:T.it.length};all=all.concat(v)});
+const tot=all.length?all.reduce((a,b)=>a+b)/all.length:0;const q=r.bl.reduce((a,b)=>a+b,0);const hq=q?(r.bl[3]+r.bl[4]+r.bl[5])/q*100:0;
+return{t,tot,q,hq,lvl:lvl(tot),filled:all.length}}
+function lvl(x){return x>=3.5?'ดีเยี่ยม':x>=2.5?'ดี':x>=1.5?'พอใช้':x>0?'ควรปรับปรุง':'-'}
+function bars(rows,max){return rows.map(([a,b,c])=>`<div class="row"><span>${E(a)}</span><div class="bar"><i style="width:${Math.min(100,b/max*100)}%"></i></div><b>${c??b.toFixed(2)}</b></div>`).join('')}
+/* ---- ข้อมูล ---- */
+let SUP=true,UID=null,U=null,sched=[],roster=[],mine=[],tsel='';
+const byDT=(a,b)=>((a.date||'')+(a.time||'')).localeCompare((b.date||'')+(b.time||''));
+async function init(){try{DB=await claude.use('db')}catch(e){}
+try{U=await claude.use('user')}catch(e){}
+if(DB){SUP=U?U.canEdit():false;try{UID=U&&U.id?await U.id():null}catch(e){}
+const sub=(c,fn)=>{try{DB.collection(c).onSnapshot(s=>{fn(s.docs.map(d=>({...d.data(),id:d.id})));if(view!=='form')render()},()=>{})}catch(e){}};
+if(SUP){col=DB.collection('obs');sub('obs',a=>{recs=a.sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.ts||0)-(a.ts||0))});sub('sched',a=>{sched=a.sort(byDT)});sub('roster',a=>{roster=a})}
+else if(UID){sub('mine/'+UID+'/items',a=>{mine=a});sub('roster',a=>{roster=a})}
+setSt(SUP?'🟢 ศึกษานิเทศก์ · real-time':'🟢 ครู · เห็นเฉพาะผลของตนเอง');if(!SUP)view='teacher'}
+else{recs=lsGet();try{sched=JSON.parse(localStorage.getItem('sch')||'[]')}catch(e){}setSt('🟡 โหมดเครื่องนี้ (ไม่ซิงก์/ไม่ส่งคืนครู)')}
+render()}
+function setSt(t){$('#st').textContent=t}
+const uidsOf=n=>roster.filter(x=>(x.name||'').trim()===(n||'').trim()).map(x=>x.id);
+async function mirror(kind,o){const u=uidsOf(o.teacher);for(const id of u)await DB.collection('mine/'+id+'/items').doc(kind+'_'+o.id).set(JSON.parse(JSON.stringify({...o,kind})));return u.length}
+async function save(ret){cur.ts=Date.now();if(ret){cur.ret=true;cur.retAt=new Date().toLocaleString('th-TH')}
+try{if(col){await col.doc(cur.id).set(JSON.parse(JSON.stringify(cur)));if(ret){const n=await mirror('r',cur);if(!n){toast('บันทึกแล้ว แต่ครูยังไม่ลงทะเบียนชื่อ จึงยังไม่เห็นผล');return}}}else{recs=recs.filter(x=>x.id!==cur.id);recs.unshift(JSON.parse(JSON.stringify(cur)));lsSet()}
+toast(ret?'ส่งคืนข้อมูลให้ครูแล้ว ✔':'บันทึกแล้ว ✔')}catch(e){toast('บันทึกไม่สำเร็จ: '+(e.message||e.code||''))}}
+async function del(id){if(!confirm('ลบรายการนี้?'))return;try{if(col){await col.doc(id).delete();const r=recs.find(x=>x.id===id);if(r)for(const u of uidsOf(r.teacher))await DB.collection('mine/'+u+'/items').doc('r_'+id).delete()}else{recs=recs.filter(x=>x.id!==id);lsSet()}}catch(e){toast('ลบไม่สำเร็จ')}render()}
+function toast(t){const d=document.createElement('div');d.textContent=t;d.style.cssText='position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--pr);color:var(--pt);padding:9px 18px;border-radius:99px;z-index:20';document.body.append(d);setTimeout(()=>d.remove(),2200)}
+/* ---- นำทาง ---- */
+function render(){document.body.dataset.v=view;const NAV=SUP?[['form','📝 บันทึกนิเทศ'],['dash','📊 Dashboard'],['list','📋 รายการ/พิมพ์'],['sched','📅 นัดโค้ชชิ่ง'],['teacher','👩‍🏫 ทะเบียนครู']]:[['teacher','👩‍🏫 ผลนิเทศและนัดหมายของฉัน']];
+$('#nav').innerHTML=NAV.map(([k,t])=>`<button class="${view===k?'on':''}" data-v="${k}">${t}</button>`).join('');
+$('#nav').onclick=e=>{const v=e.target.dataset.v;if(v){view=v;render();scrollTo(0,0)}};
+if(!SUP)view='teacher';({form:rForm,dash:rDash,list:rList,sched:rSched,teacher:rTeacher})[view]()}
+/* ---- ฟอร์ม ---- */
+function rForm(){const c=calc(cur);
+const f=(k,l,t='text')=>`<div><label>${l}<input type="${t}" data-f="${k}" value="${E(cur[k])}"></label></div>`;
+$('#app').innerHTML=`<div class="card"><h2>ข้อมูลทั่วไป</h2><div class="g">${f('date','วันที่นิเทศ','date')}${f('observer','ศึกษานิเทศก์')}${f('teacher','ครูผู้รับการนิเทศ')}${f('school','โรงเรียน')}${f('subject','กลุ่มสาระ/วิชา')}${f('grade','ระดับชั้น')}${f('topic','เรื่อง/แผนการสอน')}</div></div>
+<div class="card" style="position:sticky;top:52px;z-index:4"><b id="live"></b></div>
+${TOOLS.map(T=>`<div class="card"><h2>${T.n}</h2><div class="mu">1 = ไม่พบ · 2 = พบน้อย · 3 = พบบ่อย · 4 = พบสม่ำเสมอ/เด่นชัด</div>${T.it.map((x,i)=>`<div class="it"><div>${T.k}${i+1}. ${E(x)}</div><div class="sc">${[1,2,3,4].map(n=>`<button data-k="${T.k+i}" data-n="${n}" class="${cur.r[T.k+i]==n?'on':''}">${n} ${LV[n-1]}</button>`).join('')}</div></div>`).join('')}</div>`).join('')}
+<div class="card"><h2>เครื่องมือ 5: บันทึกระดับคำถามของครู (Bloom)</h2><div class="mu">กดนับเมื่อครูถามคำถามแต่ละระดับ — ระดับ วิเคราะห์ ประเมินค่า สร้างสรรค์ = คำถามขั้นสูง</div>
+${BL.map((b,i)=>`<div class="tl"><span style="width:90px">${i+1}. ${b}${i>2?' ★':''}</span><button data-b="${i}" data-d="-1">−</button><b>${cur.bl[i]}</b><button class="pri" data-b="${i}" data-d="1">+</button></div>`).join('')}</div>
+<div class="card"><h2>เครื่องมือ 6: บันทึกการปฏิสัมพันธ์ในชั้นเรียน</h2>${TY.map(([k,l])=>`<div class="tl"><span style="flex:1">${l}</span><button data-t="${k}" data-d="-1">−</button><b>${cur.ty[k]}</b><button class="pri" data-t="${k}" data-d="1">+</button></div>`).join('')}</div>
+<div class="card"><h2>สรุปผลและข้อเสนอแนะ</h2><label>จุดเด่น<textarea data-f="str">${E(cur.str)}</textarea></label><label>ประเด็นที่ควรพัฒนา<textarea data-f="imp">${E(cur.imp)}</textarea></label><label>ข้อตกลง/แนวทางพัฒนาร่วมกัน (Action plan)<textarea data-f="act">${E(cur.act)}</textarea></label></div>
+<div class="card np" style="display:flex;gap:8px;flex-wrap:wrap"><button class="pri" id="sv">💾 บันทึก</button><button class="ok" id="rt">📤 บันทึกและส่งคืนครู (real-time)</button><button id="nw">+ เริ่มรายการใหม่</button></div>`;
+const A=$('#app');A.oninput=e=>{const k=e.target.dataset.f;if(k)cur[k]=e.target.value};
+A.onclick=e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+if(d.k){cur.r[d.k]=+d.n;[...A.querySelectorAll(`[data-k="${d.k}"]`)].forEach(x=>x.classList.toggle('on',x.dataset.n==d.n));live()}
+else if(d.b!==undefined){cur.bl[d.b]=Math.max(0,cur.bl[d.b]+ +d.d);b.parentNode.querySelector('b').textContent=cur.bl[d.b];live()}
+else if(d.t){cur.ty[d.t]=Math.max(0,cur.ty[d.t]+ +d.d);b.parentNode.querySelector('b').textContent=cur.ty[d.t]}
+else if(b.id==='sv')chk()&&save();else if(b.id==='rt'){if(chk()&&confirm('ส่งคืนผลการนิเทศให้ครู '+cur.teacher+' ?'))save(true)}
+else if(b.id==='nw'){cur=blank();render()}};live()}
+function chk(){if(!cur.teacher.trim()){toast('กรุณากรอกชื่อครูผู้รับการนิเทศ');return false}const c=calc(cur);if(c.filled<TOOLS.reduce((a,t)=>a+t.it.length,0)&&!confirm('ยังประเมินไม่ครบทุกข้อ (ครบ '+c.filled+'/'+TOOLS.reduce((a,t)=>a+t.it.length,0)+') บันทึกต่อหรือไม่?'))return false;return true}
+function live(){const c=calc(cur),n=TOOLS.reduce((a,t)=>a+t.it.length,0);$('#live').innerHTML=`คะแนนเฉลี่ย ${c.tot.toFixed(2)}/4 · ระดับ <span class="tag">${c.lvl}</span> · ครบ ${c.filled}/${n} ข้อ · คำถามขั้นสูง ${c.hq.toFixed(0)}% (${c.q} คำถาม)`}
+/* ---- รายงาน ---- */
+function report(r){const c=calc(r);const fullName=r.teacher;
+return `<div id="rep"><h2 style="text-align:center;margin:0">รายงานผลการนิเทศการสอนเพื่อพัฒนาทักษะการคิดขั้นสูง</h2>
+<p style="text-align:center;margin:2px 0 10px">วันที่ ${E(r.date)} · ศึกษานิเทศก์: ${E(r.observer||'-')}</p>
+<table><tr><td>ครูผู้รับการนิเทศ: <b>${E(r.teacher)}</b></td><td>โรงเรียน: ${E(r.school||'-')}</td></tr><tr><td>วิชา: ${E(r.subject||'-')} ชั้น ${E(r.grade||'-')}</td><td>เรื่อง: ${E(r.topic||'-')}</td></tr></table>
+<h3>สรุปผลภาพรวม: ${c.tot.toFixed(2)} / 4.00 — ระดับ ${c.lvl}</h3>
+${bars(TOOLS.map(T=>[T.n.replace(/เครื่องมือ \d: /,''),c.t[T.k].m,c.t[T.k].m.toFixed(2)]),4)}
+<h3>ระดับคำถามของครู (รวม ${c.q} ข้อ, ขั้นสูง ${c.hq.toFixed(0)}%)</h3>${bars(BL.map((b,i)=>[b,r.bl[i],r.bl[i]]),Math.max(1,...r.bl))}
+<h3>การปฏิสัมพันธ์</h3><table>${TY.map(([k,l])=>`<tr><td>${l}</td><td>${r.ty[k]} ครั้ง</td></tr>`).join('')}</table>
+<h3>รายข้อ (ข้อที่ได้คะแนน ≤ 2)</h3><ul>${TOOLS.flatMap(T=>T.it.map((x,i)=>[T.k+(i+1),x,+r.r[T.k+i]||0])).filter(x=>x[2]>0&&x[2]<=2).map(x=>`<li>${x[0]} ${E(x[1])} (${x[2]})</li>`).join('')||'<li>ไม่มี</li>'}</ul>
+<p><b>จุดเด่น:</b> ${E(r.str||'-')}</p><p><b>ประเด็นที่ควรพัฒนา:</b> ${E(r.imp||'-')}</p><p><b>แนวทางพัฒนาร่วมกัน:</b> ${E(r.act||'-')}</p>
+<table style="margin-top:30px;text-align:center"><tr><td>ลงชื่อ ......................... ศึกษานิเทศก์<br>(${E(r.observer||'.................')})</td><td>ลงชื่อ ......................... ครูผู้รับการนิเทศ<br>(${E(fullName)})</td></tr></table></div>`}
+function rList(){$('#app').innerHTML=`<div class="card"><h2>รายการนิเทศทั้งหมด (${recs.length}) <button onclick="exportXlsx()">📥 Excel</button></h2><div class="sw"><table><tr><th>วันที่</th><th>ครู</th><th>วิชา</th><th>คะแนน</th><th>สถานะ</th><th></th></tr>${recs.map(r=>{const c=calc(r);return`<tr><td>${E(r.date)}</td><td>${E(r.teacher)}</td><td>${E(r.subject)}</td><td>${c.tot.toFixed(2)} ${c.lvl}</td><td>${r.ret?'<span class="tag">ส่งคืนแล้ว</span>':'ร่าง'}</td><td style="white-space:nowrap"><button data-o="${r.id}">ดู/พิมพ์</button> <button data-e="${r.id}">แก้ไข</button> <button data-x="${r.id}">🗑</button></td></tr>`}).join('')||'<tr><td colspan=6>ยังไม่มีข้อมูล</td></tr>'}</table></div></div>
+<div id="repw" class="card">${sel&&recs.find(r=>r.id===sel)?`<button class="pri np" onclick="print()">🖨️ พิมพ์รายงาน</button><br><br>`+report(recs.find(r=>r.id===sel)):'<span class="mu">เลือก “ดู/พิมพ์” เพื่อแสดงรายงานรายบุคคล</span>'}</div>`;
+$('#app').onclick=e=>{const d=e.target.dataset;if(d.o){sel=d.o;rList();$('#repw').scrollIntoView()}if(d.e){cur=JSON.parse(JSON.stringify(recs.find(r=>r.id===d.e)));view='form';render()}if(d.x)del(d.x)}}
+/* ---- ตารางนัดโค้ชชิ่ง ---- */
+const ST=['นัดแล้ว','เสร็จสิ้น','ยกเลิก'];
+async function saveS(o){try{if(DB){await DB.collection('sched').doc(o.id).set(JSON.parse(JSON.stringify(o)));await mirror('s',o)}else{sched=sched.filter(x=>x.id!==o.id).concat(o).sort(byDT);localStorage.setItem('sch',JSON.stringify(sched))}toast('บันทึกนัดหมายแล้ว ✔')}catch(e){toast('ไม่สำเร็จ: '+(e.message||e.code||''))}}
+function rSched(){const names=[...new Set([...recs.map(r=>r.teacher),...roster.map(r=>r.name)].filter(Boolean))];
+const f=(k,l,t='text')=>`<div><label>${l}<input type="${t}" id="s_${k}"></label></div>`;
+$('#app').innerHTML=`<div class="card"><h2>นัดหมายนิเทศออนไลน์แบบโค้ชชิ่ง</h2><div class="g"><div><label>ครู<input id="s_teacher" list="nl"><datalist id="nl">${names.map(n=>`<option value="${E(n)}">`).join('')}</datalist></label></div>${f('date','วันที่','date')}${f('time','เวลา','time')}${f('dur','ระยะเวลา (นาที)','number')}<div><label>ช่องทาง<select id="s_plat"><option>Google Meet</option><option>Zoom</option><option>MS Teams</option><option>LINE</option></select></label></div>${f('link','ลิงก์ห้องประชุม')}${f('focus','ประเด็นโค้ชชิ่ง/เป้าหมาย')}</div><br><button class="pri" id="sadd">+ เพิ่มนัดหมาย</button></div>
+${sched.map(o=>`<div class="card" style="${o.status==='ยกเลิก'?'opacity:.55':''}"><b>${E(o.date)} ${E(o.time)} · ${E(o.teacher)}</b> <span class="tag">${E(o.status)}</span><div class="mu">${E(o.plat)} · ${E(o.dur||'-')} นาที · ${E(o.focus||'')} ${o.link?`· <a href="${E(o.link)}" target="_blank" rel="noopener">เข้าห้อง</a>`:''}</div>
+<details><summary>บันทึกโค้ชชิ่ง GROW (ครูเห็นด้วย)</summary>${[['g','G เป้าหมาย'],['r','R สภาพจริง'],['o','O ทางเลือก'],['w','W แผนปฏิบัติ']].map(([k,l])=>`<label>${l}<textarea data-gk="${k}" data-sid="${o.id}">${E(o[k])}</textarea></label>`).join('')}</details>
+<div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap"><button data-sv="${o.id}" class="pri">💾 บันทึก</button>${ST.map(x=>`<button data-sid2="${o.id}" data-st="${x}">${x}</button>`).join('')}</div></div>`).join('')||'<div class="card mu">ยังไม่มีนัดหมาย</div>'}`;
+$('#app').onclick=async e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+if(b.id==='sadd'){const g=k=>$('#s_'+k).value;const o={id:'s'+Date.now().toString(36),teacher:g('teacher').trim(),date:g('date'),time:g('time'),dur:g('dur'),plat:g('plat'),link:g('link'),focus:g('focus'),status:'นัดแล้ว',g:'',r:'',o:'',w:''};
+if(!o.teacher||!o.date||!o.time)return toast('กรอกครู วันที่ และเวลา');
+if(sched.some(x=>x.date===o.date&&x.time===o.time&&x.status!=='ยกเลิก')&&!confirm('มีนัดหมายเวลาเดียวกันอยู่แล้ว เพิ่มต่อหรือไม่?'))return;await saveS(o);if(!DB)rSched()}
+else if(d.sv){const o={...sched.find(x=>x.id===d.sv)};document.querySelectorAll(`[data-sid="${d.sv}"]`).forEach(t=>o[t.dataset.gk]=t.value);await saveS(o);if(!DB)rSched()}
+else if(d.st){await saveS({...sched.find(x=>x.id===d.sid2),status:d.st});if(!DB)rSched()}}}
+/* ---- ครู ---- */
+function rTeacher(){if(SUP){const n=r=>recs.filter(x=>x.ret&&x.teacher.trim()===(r.name||'').trim()).length;
+$('#app').innerHTML=`<div class="card"><h2>ทะเบียนครูที่ลงทะเบียนรับผล (${roster.length})</h2><p class="mu">ให้ครูเปิดลิงก์ที่แชร์ให้ แล้วลงทะเบียนชื่อให้ตรงกับชื่อในแบบนิเทศ ระบบจะส่งผลเฉพาะของครูคนนั้น</p><table><tr><th>ชื่อ</th><th>ผลที่ส่งคืน</th></tr>${roster.map(r=>`<tr><td>${E(r.name)}</td><td>${n(r)}</td></tr>`).join('')||'<tr><td colspan=2>ยังไม่มี</td></tr>'}</table></div>`;return}
+const me=roster.find(x=>x.id===UID);
+if(!me){$('#app').innerHTML=`<div class="card"><h2>ลงทะเบียนครั้งแรก</h2><label>ชื่อ-สกุล (ให้ตรงกับที่ศึกษานิเทศก์บันทึก)<input id="rn"></label><br><button class="pri" id="rg">ลงทะเบียน</button></div>`;
+$('#rg').onclick=async()=>{const v=$('#rn').value.trim();if(!v)return;try{await DB.doc('roster/'+UID).set({name:v});toast('ลงทะเบียนแล้ว')}catch(e){toast('ไม่สำเร็จ')}};return}
+const rs=mine.filter(x=>x.kind==='r').sort((a,b)=>b.date.localeCompare(a.date)),ss=mine.filter(x=>x.kind==='s'&&x.status!=='ยกเลิก').sort(byDT);
+$('#app').innerHTML=`<div class="card"><h2>สวัสดี ${E(me.name)}</h2><span class="mu">เห็นเฉพาะข้อมูลของคุณ · อัปเดตอัตโนมัติ</span></div><div class="card"><h2>📅 นัดโค้ชชิ่ง</h2>${ss.map(o=>`<p><b>${E(o.date)} ${E(o.time)}</b> ${E(o.plat)} · ${E(o.focus||'')} ${o.link?`<a href="${E(o.link)}" target="_blank" rel="noopener">เข้าห้อง</a>`:''} <span class="tag">${E(o.status)}</span>${o.w?`<br><span class="mu">แผนปฏิบัติ: ${E(o.w)}</span>`:''}</p>`).join('')||'<span class="mu">ยังไม่มีนัดหมาย</span>'}</div>
+${rs.map(r=>`<div class="card">${report(r).replace('id="rep"','')}<button class="pri np" onclick="print()">🖨️ พิมพ์/บันทึก PDF</button></div>`).join('')||'<div class="card mu">ยังไม่มีผลนิเทศที่ส่งคืน</div>'}`}
+/* ---- ส่งออก/แนวโน้ม ---- */
+async function exportXlsx(){if(!window.XLSX)return toast('โหลดไลบรารี Excel ไม่สำเร็จ');
+const H=['วันที่','ครู','โรงเรียน','วิชา','ชั้น','เรื่อง','ศึกษานิเทศก์',...TOOLS.map(t=>'เฉลี่ย '+t.k),'เฉลี่ยรวม','ระดับ',...BL.map(b=>'คำถาม'+b),'% คำถามขั้นสูง',...TY.map(t=>t[1]),'สถานะ'];
+const A=[H,...recs.map(r=>{const c=calc(r);return[r.date,r.teacher,r.school,r.subject,r.grade,r.topic,r.observer,...TOOLS.map(t=>+c.t[t.k].m.toFixed(2)),+c.tot.toFixed(2),c.lvl,...r.bl,+c.hq.toFixed(0),...TY.map(t=>r.ty[t[0]]),r.ret?'ส่งคืนแล้ว':'ร่าง']})];
+const I=[['วันที่','ครู','ข้อ','ตัวชี้วัด','คะแนน'],...recs.flatMap(r=>TOOLS.flatMap(T=>T.it.map((x,i)=>[r.date,r.teacher,T.k+(i+1),x,+r.r[T.k+i]||''])))];
+const S=[['วันที่','เวลา','ครู','ช่องทาง','ประเด็น','สถานะ','G','R','O','W'],...sched.map(o=>[o.date,o.time,o.teacher,o.plat,o.focus,o.status,o.g,o.r,o.o,o.w])];
+const wb=XLSX.utils.book_new();[['สรุปการนิเทศ',A],['รายข้อ',I],['นัดโค้ชชิ่ง',S]].forEach(([n,a])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(a),n));
+const buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});try{const dl=await claude.use('downloads');if(!dl)return toast('ส่งออกไม่ได้ในมุมมองนี้');await dl.save({filename:'supervision-'+new Date().toISOString().slice(0,10)+'.xlsx',data:new Blob([buf])})}catch(e){toast('ยกเลิก/ไม่สำเร็จ')}}
+function trend(){const tn=[...new Set(recs.map(r=>r.teacher))];const rs=recs.filter(r=>!tsel||r.teacher===tsel);const ds=[...new Set(rs.map(r=>r.date))].sort();
+const SR=[['รวม',c=>c.tot,'#2f5bd6'],...TOOLS.map((T,i)=>['เครื่องมือ '+T.k,c=>c.t[T.k].m,['#1f9d6b','#d98a0b','#d64545','#8a4fd6'][i]])];
+const W=640,H=230,P=34,X=i=>ds.length>1?P+i*(W-2*P)/(ds.length-1):W/2,Y=v=>H-P-v/4*(H-2*P);
+const ln=SR.map(([n,f,col])=>{const pts=ds.map((d,i)=>{const v=rs.filter(r=>r.date===d).map(r=>f(calc(r))).filter(x=>x>0);return v.length?[X(i),Y(v.reduce((a,b)=>a+b)/v.length)]:null}).filter(Boolean);return`<polyline fill="none" stroke="${col}" stroke-width="${n==='รวม'?3:1.5}" points="${pts.map(q=>q.join(',')).join(' ')}"/>`+pts.map(q=>`<circle cx="${q[0]}" cy="${q[1]}" r="3" fill="${col}"/>`).join('')}).join('');
+return`<div class="card"><h2>📈 แนวโน้มตามเวลา</h2><label>เลือกครู<select id="ts"><option value="">ทุกคน (เฉลี่ย)</option>${tn.map(n=>`<option ${n===tsel?'selected':''}>${E(n)}</option>`).join('')}</select></label><div class="sw"><svg viewBox="0 0 ${W} ${H}" style="min-width:420px;width:100%">${[1,2,3,4].map(v=>`<line x1="${P}" x2="${W-P}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--bd)"/><text x="6" y="${Y(v)+4}" font-size="10" fill="var(--mu)">${v}</text>`).join('')}${ds.map((d,i)=>`<text x="${X(i)}" y="${H-10}" font-size="10" text-anchor="middle" fill="var(--mu)">${d.slice(2)}</text>`).join('')}${ln}</svg></div><div class="mu">${SR.map(([n,,c])=>`<span style="color:${c}">●</span> ${n}`).join(' &nbsp; ')}${ds.length<2?' · ต้องมีอย่างน้อย 2 วันที่เพื่อเห็นแนวโน้ม':''}</div></div>`}
+/* ---- Dashboard ---- */
+function rDash(){const n=recs.length;if(!n){$('#app').innerHTML='<div class="card">ยังไม่มีข้อมูล — เริ่มบันทึกการนิเทศที่แท็บแรก</div>';return}
+const cs=recs.map(calc);const avg=cs.reduce((a,c)=>a+c.tot,0)/n;const bl=[0,0,0,0,0,0];recs.forEach(r=>r.bl.forEach((v,i)=>bl[i]+=v));const q=bl.reduce((a,b)=>a+b,0);const hq=q?(bl[3]+bl[4]+bl[5])/q*100:0;
+const dist={'ดีเยี่ยม':0,'ดี':0,'พอใช้':0,'ควรปรับปรุง':0};cs.forEach(c=>{if(dist[c.lvl]!==undefined)dist[c.lvl]++});
+const items=[];TOOLS.forEach(T=>T.it.forEach((x,i)=>{const v=recs.map(r=>+r.r[T.k+i]||0).filter(a=>a>0);if(v.length)items.push([T.k+(i+1)+' '+x,v.reduce((a,b)=>a+b)/v.length])}));items.sort((a,b)=>a[1]-b[1]);
+const ty={};TY.forEach(([k])=>ty[k]=recs.reduce((a,r)=>a+(r.ty[k]||0),0)/n);
+const by={};recs.forEach((r,i)=>{(by[r.teacher]=by[r.teacher]||[]).push(cs[i].tot)});
+$('#app').innerHTML=`<div class="g"><div class="card kpi"><b>${n}</b>ครั้งที่นิเทศ</div><div class="card kpi"><b>${avg.toFixed(2)}</b>ค่าเฉลี่ยรวม (${lvl(avg)})</div><div class="card kpi"><b>${hq.toFixed(0)}%</b>คำถามระดับสูง</div><div class="card kpi"><b>${recs.filter(r=>r.ret).length}</b>ส่งคืนครูแล้ว</div></div>
+<div class="g"><div class="card"><h2>ค่าเฉลี่ยตามเครื่องมือ (เต็ม 4)</h2>${bars(TOOLS.map(T=>{const v=cs.map(c=>c.t[T.k].m).filter(x=>x>0);return[T.n.replace(/เครื่องมือ \d: /,''),v.length?v.reduce((a,b)=>a+b)/v.length:0]}),4)}</div>
+<div class="card"><h2>สัดส่วนระดับคำถามตาม Bloom</h2>${bars(BL.map((b,i)=>[b,bl[i],q?(bl[i]/q*100).toFixed(0)+'%':'0%']),Math.max(1,...bl))}</div></div>
+<div class="g"><div class="card"><h2>การกระจายระดับคุณภาพ</h2>${bars(Object.entries(dist).map(([k,v])=>[k,v,v]),n)}</div>
+<div class="card"><h2>ค่าเฉลี่ยการปฏิสัมพันธ์ต่อครั้ง</h2>${bars(TY.map(([k,l])=>[l,ty[k],ty[k].toFixed(1)]),Math.max(1,...Object.values(ty)))}</div></div>
+<div class="card"><h2>⚠️ 5 ประเด็นที่ควรพัฒนาที่สุด (ใช้วางแผนพัฒนาครู)</h2>${bars(items.slice(0,5),4)}</div>
+<div class="card"><h2>✅ 3 ประเด็นเด่น</h2>${bars(items.slice(-3).reverse(),4)}</div>
+${trend()}<div class="card"><h2>รายครู</h2><table><tr><th>ครู</th><th>ครั้ง</th><th>เฉลี่ย</th><th>ระดับ</th></tr>${Object.entries(by).map(([k,v])=>{const m=v.reduce((a,b)=>a+b)/v.length;return`<tr><td>${E(k)}</td><td>${v.length}</td><td>${m.toFixed(2)}</td><td>${lvl(m)}</td></tr>`}).join('')}</table></div>
+<div class="card np"><button class="pri" onclick="print()">🖨️ พิมพ์/บันทึก PDF เสนอผู้บริหาร</button> <button onclick="exportXlsx()">📥 ส่งออก Excel</button></div>`;
+$('#ts').onchange=e=>{tsel=e.target.value;rDash()};
+}
+init();
+</script></body></html>
