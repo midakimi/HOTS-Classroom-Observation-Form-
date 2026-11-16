@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ระบบนิเทศเพื่อพัฒนาสมรรถนะการจัดการเรียนรู้สำหรับครูโรงเรียนเอกชนในระบบ - กลุ่มพัฒนาคุณภาพและมาตรฐานการศึกษา สำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</title>
+<title>ระบบบันทึกการนิเทศเพื่อพัฒนาสมรรถนะการจัดการเรียนรู้สำหรับครูโรงเรียนเอกชนในระบบ - กลุ่มพัฒนาคุณภาพและมาตรฐานการศึกษา สำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#12303a;--mute:#5b727a;--sea:#0e5a6b;--sea2:#0a3f4c;--sun:#e8a317;--bg:#f2f6f6;--card:#fff;--line:#d3dfe1;--ok:#2f7d4f;--bad:#b3402f;--r:10px}
@@ -136,7 +136,7 @@ function render() {
     ? [['dash','ภาพรวม'],['obs','บันทึกการนิเทศ'],['sched','นัดโค้ช'],['roster','รายชื่อครู'],['plc','ชุมชน PLC'],['evid','หลักฐานครู']]
     : [['obs','ผลการนิเทศของฉัน'],['sched','นัดโค้ช'],['plc','ชุมชน PLC'],['evid','หลักฐานของฉัน']];
   if (!tabs.some(t => t[0] === tab)) tab = tabs[0][0];
-  app.innerHTML = `<header><h1>ระบบนิเทศเพื่อพัฒนาสมรรถนะการจัดการเรียนรู้สำหรับครูโรงเรียนเอกชนในระบบ<small>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</small></h1>
+  app.innerHTML = `<header><h1>ระบบบันทึกการนิเทศเพื่อพัฒนาสมรรถนะการจัดการเรียนรู้สำหรับครูโรงเรียนเอกชนในระบบ<small>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</small></h1>
     <span>${esc(S.name)}</span><button class="btn alt sm" data-a="logout">ออกจากระบบ</button></header>
     <nav>${tabs.map(t => `<button data-a="tab" data-v="${t[0]}" class="${t[0] === tab ? 'on' : ''}">${t[1]}</button>`).join('')}</nav>
     <main>${({dash, obs, sched, roster, plc, evid})[tab]()}</main>`;
