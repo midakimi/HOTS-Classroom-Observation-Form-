@@ -142,7 +142,8 @@ function render() {
     <main>${({dash, obs, sched, roster, plc, evid})[tab]()}</main>`;
 }
 function loginHTML() {
-  return `<form class="login" data-f="login"><h2>เข้าสู่ระบบ</h2><div class="mute">ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</div>
+  return `<form class="login" data-f="login"><h2>เข้าสู่ระบบ</h2><div class="mute">ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ<br>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส
+</div>
   <div class="seg"><button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button><button type="button" data-a="role" data-v="teacher">ครู</button></div>
   <input type="hidden" name="role" value="sup">
   <div id="lt" hidden><label>ชื่อ-สกุล (ตามที่ ศน. ลงทะเบียน)</label><input name="name" autocomplete="username"><label>รหัส PIN</label><input name="pin" type="password" inputmode="numeric" autocomplete="current-password"></div>
