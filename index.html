@@ -142,13 +142,14 @@ function render() {
     <main>${({dash, obs, sched, roster, plc, evid})[tab]()}</main>`;
 }
 function loginHTML() {
-return `<form class="login" data-f="login"><h2 style="text-align: center !important; width: 100%; display: block;">เข้าสู่ระบบ</h2>
-  <div class="mute"><div style="text-align: center; padding: 24px 16px;">
-  <p style="margin: 0; color: #52606d; font-size: 14px; line-height: 1.6;">
-    <strong>ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ</strong><br>
-    <strong>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</strong>
-  </p>
-  </div>
+  return `<form class="login" data-f="login" style="border-top: 10px solid #1d4ed8; border-radius: 12px; padding-top: 10px;">
+    <div class="mute"><div style="text-align: center; padding: 20px 16px 12px 16px;">
+      <p style="margin: 0; color: #52606d; font-size: 16px; line-height: 1.6;">
+        <strong>ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ</strong><br>
+        <strong>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</strong>
+      </p>
+    </div></div>
+    <h2 style="text-align: center !important; width: 100%; display: block; color: #1e3a8a; margin-top: 8px;">เข้าสู่ระบบ</h2>
 <div class="seg">
 </div>
   <div class="seg"><button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button><button type="button" data-a="role" data-v="teacher">ครู</button></div>
