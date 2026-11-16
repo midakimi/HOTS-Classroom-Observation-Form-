@@ -1,160 +1,156 @@
-const SHEET_SUPERVISION = "Supervision";
-const SHEET_TEACHERS = "Teachers";
-const SHEET_APP_DATA = "AppData";
+<!DOCTYPE html>
+<html lang="th"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ระบบบันทึกผลการนิเทศ HOTS</title>
+<link href="https://googleapis.com" rel="stylesheet">
+<script src="https://cloudflare.com"></script>
+<script src="https://cloudflare.com"></script>
+<style>
+:root{--bg:#f5f7fb;--card:#fff;--tx:#1b2433;--mu:#64708a;--bd:#dde3ee;--pr:#2f5bd6;--pt:#fff;--ok:#1f9d6b;--wn:#d98a0b;--er:#d64545;--soft:#eaf0ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10141c;--card:#1a2130;--tx:#e8ecf5;--mu:#98a3bb;--bd:#2c3649;--pr:#6f93ff;--pt:#0b1020;--soft:#243050}}
+:root[data-theme="dark"]{--bg:#10141c;--card:#1a2130;--tx:#e8ecf5;--mu:#98a3bb;--bd:#2c3649;--pr:#6f93ff;--pt:#0b1020;--soft:#243050}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 Sarabun,"Noto Sans Thai",sans-serif}
+header{background:var(--pr);color:var(--pt);padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+header h1{font-size:18px;margin:0}header small{opacity:.85}
+nav{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;position:sticky;top:0;background:var(--bg);z-index:5}
+nav button{white-space:nowrap}
+main{max-width:980px;margin:0 auto;padding:0 12px 60px}
+button,input,select,textarea{font:inherit;color:var(--tx)}
+button{border:1px solid var(--bd);background:var(--card);padding:7px 13px;border-radius:9px;cursor:pointer}
+button.on,button.pri{background:var(--pr);color:var(--pt);border-color:var(--pr)}
+button.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin:10px 0}
+.card h2{font-size:16px;margin:0 0 8px}.mu{color:var(--mu);font-size:13px}
+.g{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+label{display:block;font-size:13px;color:var(--mu)}
+input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--bd);border-radius:8px;background:var(--bg)}
+textarea{min-height:70px}
+.it{padding:9px 0;border-top:1px solid var(--bd)}.it:first-of-type{border-top:0}
+.sc{display:flex;gap:5px;margin-top:5px;flex-wrap:wrap}.sc button{min-width:44px}
+.sc button.on{background:var(--pr)}
+.tl{display:flex;align-items:center;gap:8px;margin:6px 0}.tl b{min-width:34px;text-align:center;font-size:18px}
+.bar{height:16px;background:var(--soft);border-radius:8px;overflow:hidden;flex:1}.bar i{display:block;height:100%;background:var(--pr)}
+.row{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:13px}.row span:first-child{width:46%}.row b{width:44px;text-align:right}
+.kpi{text-align:center}.kpi b{font-size:26px;display:block;color:var(--pr)}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;background:var(--soft)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px solid var(--bd);padding:6px;text-align:left}
+.sw{overflow-x:auto}.hide{display:none}
+#rep{background:#fff;color:#111;padding:18px;border-radius:10px;border:1px solid var(--bd)}
+#rep .bar{background:#e6ebf5}#rep .bar i{background:#2f5bd6}#rep table td,#rep table th{border-color:#ccc}
+@media print{header,nav,.np{display:none!important}body[data-v=list] .card:not(#repw),body[data-v=report] .card:not(#repw){display:none!important}body{background:#fff}#rep{border:0;padding:0}main{padding:0}}
+</style></head><body>
+<header>
+  <div><h1>🎓 ระบบบันทึกผลการนิเทศการสอน · พัฒนาทักษะการคิดขั้นสูง (HOTS)</h1><small id="st">กำลังเชื่อมต่อ Google Sheets…</small></div>
+  <div class="np" style="display:flex;gap:6px;align-items:center">
+    <button id="roleBtn" style="font-size:12px;padding:4px 10px;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">สลับมุมมอง: ครู</button>
+    <button id="syncBtn" style="font-size:12px;padding:4px 10px;background:rgba(255,255,255,.15);color:#fff;border-color:rgba(255,255,255,.3)">🔄 ซิงก์</button>
+  </div>
+</header>
+<nav id="nav"></nav>
+<main id="app"></main>
+<script>
+const GAS_URL = "https://google.com";
 
-function getOrCreateSheet(ss, name, headers) {
-  let sheet = ss.getSheetByName(name);
-  if (!sheet) {
-    sheet = ss.insertSheet(name);
-    if (headers && headers.length) sheet.appendRow(headers);
-  }
-  return sheet;
-}
-
-function doGet(e) {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const supSheet = ss.getSheetByName(SHEET_SUPERVISION);
-  const tchSheet = ss.getSheetByName(SHEET_TEACHERS);
-  const appSheet = getOrCreateSheet(ss, SHEET_APP_DATA, ["collection", "id", "json", "updatedAt"]);
-
-  return jsonResponse({
-    status: "success",
-    supervision: getSheetData(supSheet),
-    teachers: getSheetData(tchSheet),
-    appData: getSheetData(appSheet)
-  });
-}
-
-function doPost(e) {
-  try {
-    const payload = JSON.parse(e.postData.contents);
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const action = payload.action || "save";
-    const colName = payload.collection;
-    const id = payload.id;
-    const record = payload.record;
-
-    // 1. บันทึกก้อนข้อมูลกลาง (เพื่อให้หน้าเว็บซิงก์ครบ 100% ทุกแท็บ)
-    const appSheet = getOrCreateSheet(ss, SHEET_APP_DATA, ["collection", "id", "json", "updatedAt"]);
-    upsertOrDeleteAppData(appSheet, action, colName, id, record);
-
-    // 2. ซิงก์ลงตารางอ่านง่าย (Supervision และ Teachers)
-    if (colName === "obs") {
-      const supSheet = ss.getSheetByName(SHEET_SUPERVISION);
-      if (supSheet) syncToReadableSheet(supSheet, action, id, mapObsToRow(record));
-    } else if (colName === "roster") {
-      const tchSheet = ss.getSheetByName(SHEET_TEACHERS);
-      if (tchSheet) syncToReadableSheet(tchSheet, action, id, mapTeacherToRow(record));
-    }
-
-    return jsonResponse({ status: "success", message: "ซิงก์ออนไลน์เรียบร้อย" });
-  } catch (error) {
-    return jsonResponse({ status: "error", message: error.toString() });
-  }
-}
-
-function upsertOrDeleteAppData(sheet, action, colName, id, record) {
-  const data = sheet.getDataRange().getValues();
-  let foundRow = -1;
-  for (let i = 1; i < data.length; i++) {
-    if (String(data[i]) === String(colName) && String(data[i]) === String(id)) {
-      foundRow = i + 1;
-      break;
-    }
-  }
-  if (action === "delete") {
-    if (foundRow > 0) sheet.deleteRow(foundRow);
-  } else {
-    const rowValues = [colName, id, JSON.stringify(record), new Date().toLocaleString("th-TH")];
-    if (foundRow > 0) sheet.getRange(foundRow, 1, 1, 4).setValues([rowValues]);
-    else sheet.appendRow(rowValues);
-  }
-}
-
-function syncToReadableSheet(sheet, action, id, mappedObj) {
-  const data = sheet.getDataRange().getValues();
-  if (data.length === 0) return;
-  const headers = data;
-  const idColIndex = headers.findIndex(h => String(h).toLowerCase().includes("id"));
-  
-  let foundRow = -1;
-  if (idColIndex >= 0) {
-    for (let i = 1; i < data.length; i++) {
-      if (String(data[i][idColIndex]) === String(id)) {
-        foundRow = i + 1;
-        break;
+/* ---- ตัวเชื่อมต่อ Google Sheets Cloud Adapter ---- */
+const CloudDB = {
+  listeners: [],
+  cache: {},
+  async syncAll() {
+    setSt('🔄 กำลังซิงก์ข้อมูลออนไลน์…');
+    try {
+      const res = await fetch(GAS_URL + '?t=' + Date.now());
+      const json = await res.json();
+      if (json.status === 'success') {
+        const map = {};
+        (json.appData || []).forEach(row => {
+          try {
+            const c = row.collection;
+            const obj = JSON.parse(row.json);
+            if (!map[c]) map[c] = [];
+            map[c].push(obj);
+          } catch (e) {}
+        });
+        this.cache = map;
+        localStorage.setItem('gs_cache', JSON.stringify(map));
+        this.notify();
+        setSt(SUP ? '🟢 เชื่อมต่อ Google Sheets · ซิงก์ออนไลน์แล้ว' : '🟢 โหมดครู · เชื่อมต่อ Google Sheets');
       }
+    } catch (e) {
+      try { this.cache = JSON.parse(localStorage.getItem('gs_cache') || '{}'); } catch (err) {}
+      this.notify();
+      setSt('🟠 ออฟไลน์ชั่วคราว (ใช้ข้อมูลแคชในเครื่อง)');
     }
+  },
+  notify() {
+    this.listeners.forEach(({ c, fn }) => {
+      const items = (this.cache[c] || []).map(d => ({ id: d.id, data: () => d }));
+      fn({ docs: items });
+    });
+  },
+  collection(c) {
+    return {
+      onSnapshot: (fn) => {
+        this.listeners.push({ c, fn });
+        const items = (this.cache[c] || []).map(d => ({ id: d.id, data: () => d }));
+        fn({ docs: items });
+      },
+      doc: (id) => ({
+        set: async (record) => {
+          if (c === 'obs') {
+            const cInfo = calc(record);
+            record._avg = cInfo.tot.toFixed(2);
+            record._hq = cInfo.hq.toFixed(0);
+          }
+          if (!this.cache[c]) this.cache[c] = [];
+          this.cache[c] = this.cache[c].filter(x => x.id !== id);
+          this.cache[c].unshift(record);
+          localStorage.setItem('gs_cache', JSON.stringify(this.cache));
+          this.notify();
+          setSt('⏳ กำลังบันทึกลง Google Sheets…');
+          await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'save', collection: c, id, record })
+          });
+          setSt('🟢 ซิงก์ออนไลน์เรียบร้อย');
+        },
+        delete: async () => {
+          if (this.cache[c]) {
+            this.cache[c] = this.cache[c].filter(x => x.id !== id);
+            localStorage.setItem('gs_cache', JSON.stringify(this.cache));
+            this.notify();
+          }
+          setSt('⏳ กำลังลบข้อมูลออนไลน์…');
+          await fetch(GAS_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify({ action: 'delete', collection: c, id })
+          });
+          setSt('🟢 ซิงก์ออนไลน์เรียบร้อย');
+        }
+      })
+    };
+  },
+  doc(path) {
+    const parts = path.split('/');
+    const id = parts.pop();
+    const c = parts.join('/');
+    return this.collection(c).doc(id);
   }
+};
 
-  if (action === "delete") {
-    if (foundRow > 0) sheet.deleteRow(foundRow);
-    return;
-  }
-
-  const rowValues = headers.map(h => {
-    const key = String(h).trim();
-    return mappedObj[key] !== undefined ? mappedObj[key] : "";
-  });
-
-  if (foundRow > 0) {
-    sheet.getRange(foundRow, 1, 1, rowValues.length).setValues([rowValues]);
-  } else {
-    sheet.appendRow(rowValues);
-  }
-}
-
-function mapObsToRow(r) {
-  if (!r) return {};
-  return {
-    "ID": r.id || "",
-    "Date": r.date || "",
-    "Supervisor": r.observer || "",
-    "Term": r.cyc || "",
-    "Teacher": r.teacher || "",
-    "School": r.school || "",
-    "Subject": r.subject || "",
-    "Grade": r.grade || "",
-    "Topic": r.topic || "",
-    "Phase": r.phase || "",
-    "Student_Count": (r.ctx && r.ctx.n) || "",
-    "Resources": (r.ctx && r.ctx.res) || "",
-    "Teaching_load": (r.ctx && r.ctx.load) || "",
-    "Limitations": (r.ctx && r.ctx.lim) || "",
-    "Scores": JSON.stringify(r.r || {}),
-    "Average_score": r._avg || "",
-    "Hots_percent": r._hq || "",
-    "Feedback": [r.str, r.imp, r.act].filter(Boolean).join(" | "),
-    "Timestamp": new Date().toLocaleString("th-TH")
-  };
-}
-
-function mapTeacherToRow(t) {
-  if (!t) return {};
-  return {
-    "teacher_id": t.id || "",
-    "prefix": "",
-    "fullname": t.name || "",
-    "school": t.school || "",
-    "subject": t.subject || "",
-    "grade": t.grade || ""
-  };
-}
-
-function getSheetData(sheet) {
-  if (!sheet) return [];
-  const data = sheet.getDataRange().getValues();
-  if (data.length <= 1) return [];
-  const headers = data;
-  return data.slice(1).map(row => {
-    let obj = {};
-    headers.forEach((h, i) => obj[h] = row[i]);
-    return obj;
-  });
-}
-
-function jsonResponse(data) {
-  return ContentService
-    .createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
-}
+const TOOLS=[
+{k:'A',n:'เครื่องมือ 1: การออกแบบและจัดกิจกรรมเพื่อ HOTS',it:['เป้าหมายการเรียนรู้ระบุระดับการคิดขั้นสูง (วิเคราะห์/ประเมิน/สร้างสรรค์)','กิจกรรมใช้สถานการณ์/ปัญหาจริงให้นักเรียนคิดวิเคราะห์','ให้นักเรียนลงมือปฏิบัติ สืบค้น หรือทดลองด้วยตนเอง','มีกิจกรรมกลุ่ม/ร่วมมือที่ทุกคนมีบทบาทชัดเจน','ใช้สื่อ/เทคโนโลยีสนับสนุนการคิดและสร้างสรรค์ชิ้นงาน','ขั้นตอนการสอนเชื่อมโยงความรู้เดิมสู่ความรู้ใหม่','จัดการเวลาให้นักเรียนมีเวลาคิดอย่างเพียงพอ','ปิดบทเรียนด้วยการสรุป/สะท้อนคิดของนักเรียน']},
+{k:'B',n:'เครื่องมือ 2: คำถามและการกระตุ้นความคิด',it:['ใช้คำถามปลายเปิดที่มีได้หลายคำตอบ','ถามต่อเนื่อง “เพราะอะไร/มีหลักฐานอะไร”','รอคอยคำตอบ (Wait time) ≥ 3 วินาที','ไม่ตัดสินคำตอบทันที เปิดโอกาสให้เพื่อนโต้แย้ง/เสริม','กระตุ้นให้นักเรียนตั้งคำถามเอง','ปรับระดับคำถามให้ท้าทายตามศักยภาพผู้เรียน']},
+{k:'C',n:'เครื่องมือ 3: พฤติกรรมการคิดขั้นสูงของนักเรียน',it:['วิเคราะห์ จำแนก เปรียบเทียบข้อมูลได้','ประเมินข้อมูล ให้เหตุผล ตัดสินใจโดยมีหลักฐาน','สร้างสรรค์ความคิด/ชิ้นงานใหม่ ไม่ซ้ำแบบเดิม','แก้ปัญหาอย่างเป็นขั้นตอนและทดลองหลายแนวทาง','อภิปราย โต้แย้ง และรับฟังความเห็นต่าง','เชื่อมโยงความรู้สู่ชีวิตจริง/ข้ามสาระ','สะท้อนคิดกระบวนการเรียนรู้ของตนเอง','นักเรียนมีส่วนร่วมอย่างทั่วถึง (≥ 80%)']},
+{k:'D',n:'เครื่องมือ 4: การวัดประเมินผลและข้อมูลย้อนกลับ',it:['ใช้การประเมินตามสภาพจริง/ชิ้นงาน/Rubric','เกณฑ์การประเมินแจ้งนักเรียนชัดเจน','ให้ข้อมูลย้อนกลับที่ชี้แนะทางพัฒนา','เปิดโอกาสประเมินตนเองและเพื่อน']}];
+const LV=['ไม่พบ','พบน้อย','พบบ่อย','พบสม่ำเสมอ'];
+const BL=['จำ','เข้าใจ','ประยุกต์','วิเคราะห์','ประเมินค่า','สร้างสรรค์'];
+const TY=[['wait','ครั้งที่ครูรอคอยคำตอบ ≥ 3 วินาที'],['sq','นักเรียนตั้งคำถามเอง'],['sr','นักเรียนตอบพร้อมให้เหตุผล/หลักฐาน'],['grp','ครั้งที่นักเรียนทำงานกลุ่ม/อภิปรายคู่']];
+const $=s=>document.querySelector(s);const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let DB=CloudDB,col=null,recs=[],view='form',cur=blank(),sel=null,teacherQ='';
+function blank(){return{id:'o'+Date.now().toString(36),date:new Date().toISOString().slice(0,10),teacher:'',school:'',subject:'',grade:'',topic:'',observer:'',r:{},bl:[0,0,0,0,0,0],ty:{wait:0,sq:0,sr:0,grp:0},str:'',imp:'',act:'',ret:false,note:'',phase:'ก่อน',cyc:'1',ctx:{},tuid:''}}
+function lsGet(){try{return JSON.parse(localStorage.getItem('sup')||'[]')}catch(e){return[]}}
+function lsSet(){try{localStorage.setItem('sup',JSON.stringify(recs))}catch(e){}}
+/* ---- คำนวณ ---- */
