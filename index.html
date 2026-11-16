@@ -52,7 +52,6 @@ table{width:100%;border-collapse:collapse;font-size:13px}th,td{border-bottom:1px
 <script>
 const GAS_URL = "https://google.com";
 
-/* ---- ตัวเชื่อมต่อ Google Sheets Cloud Adapter ---- */
 const CloudDB = {
   listeners: [],
   cache: {},
@@ -153,4 +152,4 @@ let DB=CloudDB,col=null,recs=[],view='form',cur=blank(),sel=null,teacherQ='';
 function blank(){return{id:'o'+Date.now().toString(36),date:new Date().toISOString().slice(0,10),teacher:'',school:'',subject:'',grade:'',topic:'',observer:'',r:{},bl:[0,0,0,0,0,0],ty:{wait:0,sq:0,sr:0,grp:0},str:'',imp:'',act:'',ret:false,note:'',phase:'ก่อน',cyc:'1',ctx:{},tuid:''}}
 function lsGet(){try{return JSON.parse(localStorage.getItem('sup')||'[]')}catch(e){return[]}}
 function lsSet(){try{localStorage.setItem('sup',JSON.stringify(recs))}catch(e){}}
-/* ---- คำนวณ ---- */
+
