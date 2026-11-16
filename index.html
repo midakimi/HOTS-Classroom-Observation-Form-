@@ -165,8 +165,8 @@ function loginHTML() {
 </div>
   <div class="seg"><button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button><button type="button" data-a="role" data-v="teacher">ครู</button></div>
   <input type="hidden" name="role" value="sup">
-  <div id="lt" hidden><label>ชื่อ-สกุล (ตามที่ ศน. ลงทะเบียน)</label><input name="name" autocomplete="username"><label>รหัส PIN</label><input name="pin" type="password" inputmode="numeric" autocomplete="current-password"></div>
-  <div id="ls"><label>รหัสผ่านศึกษานิเทศก์</label><input name="password" type="password" autocomplete="current-password"></div>
+  <div id="lt" hidden><label>ชื่อผู้ใช้งาน</label><input name="name" autocomplete="username"><label>รหัส</label><input name="pin" type="password" inputmode="numeric" autocomplete="current-password"></div>
+  <div id="ls"><label>รหัสผ่าน</label><input name="password" type="password" autocomplete="current-password"></div>
   <div class="row" style="margin-top:16px"><button class="btn sp">เข้าสู่ระบบ</button><button type="button" class="btn alt" data-a="cfg" title="ตั้งค่า URL">⚙ ตั้งค่า</button></div></form>`;
 }
 
@@ -253,14 +253,14 @@ function schForm(r = {}) {
 /* ---------- รายชื่อครู ---------- */
 function roster() {
   const T = L('roster');
-  return `<h2>รายชื่อครู</h2><div class="row noprint" style="margin-bottom:12px"><span class="mute sp">ครูใช้ชื่อ-สกุล และ PIN ที่กำหนดไว้เพื่อเข้าสู่ระบบ</span><button class="btn" data-a="nros">+ เพิ่มครู</button></div>
-  ${T.length ? `<div class="card wrap"><table><tr><th>ชื่อ-สกุล</th><th>โรงเรียน</th><th>วิชา</th><th>PIN</th><th></th></tr>${T.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.school)}</td><td>${esc(t.subject)}</td><td>${esc(t.pin)}</td>
+  return `<h2>รายชื่อครู</h2><div class="row noprint" style="margin-bottom:12px"><span class="mute sp">ครูใช้ชื่อ-นามสกุล และรหัสผ่านที่กำหนดไว้เพื่อเข้าสู่ระบบ</span><button class="btn" data-a="nros">+ เพิ่มครู</button></div>
+  ${T.length ? `<div class="card wrap"><table><tr><th>ชื่อ-สกุล</th><th>โรงเรียน</th><th>วิชา</th><th>รหัสผ่าน</th><th></th></tr>${T.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.school)}</td><td>${esc(t.subject)}</td><td>${esc(t.pin)}</td>
    <td class="row"><button class="btn alt sm" data-a="eros" data-id="${t.id}">แก้ไข</button><button class="btn bad sm" data-a="dros" data-id="${t.id}">ลบ</button></td></tr>`).join('')}</table></div>` : '<div class="empty">ยังไม่มีรายชื่อครู กด “+ เพิ่มครู”</div>'}`;
 }
 function rosForm(r = {}) {
   return `<form data-f="roster"><h2>${r.id ? 'แก้ไข' : 'เพิ่ม'}ครู</h2><input type="hidden" name="id" value="${esc(r.id)}">
   <label>ชื่อ-สกุล</label><input name="name" value="${esc(r.name)}" required><label>โรงเรียน</label><input name="school" value="${esc(r.school)}" required>
-  <label>วิชา / กลุ่มสาระ</label><input name="subject" value="${esc(r.subject)}"><label>PIN เข้าสู่ระบบ (อย่างน้อย 4 หลัก)</label><input name="pin" value="${esc(r.pin)}" minlength="4" required>
+  <label>วิชา / กลุ่มสาระ</label><input name="subject" value="${esc(r.subject)}"><label>รหัสผ่านเพื่อเข้าสู่ระบบ (อย่างน้อย 4 หลัก)</label><input name="pin" value="${esc(r.pin)}" minlength="4" required>
   <div class="row" style="margin-top:16px"><button class="btn">บันทึก</button><button type="button" class="btn alt" data-a="close">ยกเลิก</button></div></form>`;
 }
 
