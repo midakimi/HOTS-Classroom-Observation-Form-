@@ -143,29 +143,19 @@ function render() {
 }
 function loginHTML() {
   return `<form class="login" data-f="login"><h2>เข้าสู่ระบบ</h2><div class="mute">
-  "text-align: center; padding: 24px 16px; margin-top: 32px; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; line-height: 1.6;">
-<!-- 1. ส่วนหัวหน้าเข้าสู่ระบบ (จัดกึ่งกลางทั้งหมด ไม่มีโลโก้) -->
+ส่วนหัวหน้าเข้าสู่ระบบ (จัดกึ่งกลางทั้งหมด) -->
 <div style="text-align: center; padding: 24px 16px;">
-
-  <h2 style="margin: 0 0 12px 0; color: #0f2933; font-size: 26px; font-weight: 700;">
-    เข้าสู่ระบบ
   </h2>
-
   <p style="margin: 0; color: #52606d; font-size: 14px; line-height: 1.6;">
-    ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ<br>
+     <strong>ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ <strong><br>
     <strong>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</strong>
   </p>
-
 </div>
-
-<!-- 2. ส่วนปุ่มเลือกบทบาทผู้ใช้งาน -->
 <div class="seg">
-  <button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button>
-  <button type="button" data-a="role" data-v="sch">โรงเรียน</button>
 </div>
   <div class="seg"><button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button><button type="button" data-a="role" data-v="teacher">ครู</button></div>
   <input type="hidden" name="role" value="sup">
-  <div id="lt" hidden><label>ชื่อผู้ใช้งาน</label><input name="name" autocomplete="username"><label>รหัส</label><input name="pin" type="password" inputmode="numeric" autocomplete="current-password"></div>
+  <div id="lt" hidden><label>ชื่อผู้ใช้งาน</label><input name="name" autocomplete="username"><label>รหัสผ่าน</label><input name="pin" type="password" inputmode="numeric" autocomplete="current-password"></div>
   <div id="ls"><label>รหัสผ่าน</label><input name="password" type="password" autocomplete="current-password"></div>
   <div class="row" style="margin-top:16px"><button class="btn sp">เข้าสู่ระบบ</button><button type="button" class="btn alt" data-a="cfg" title="ตั้งค่า URL">⚙ ตั้งค่า</button></div></form>`;
 }
