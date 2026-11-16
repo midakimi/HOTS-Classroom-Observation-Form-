@@ -142,8 +142,19 @@ function render() {
     <main>${({dash, obs, sched, roster, plc, evid})[tab]()}</main>`;
 }
 function loginHTML() {
-  return `<form class="login" data-f="login"><h2>เข้าสู่ระบบ</h2><div class="mute">ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ<br>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส
+  return `<form class="login" data-f="login"><h2>เข้าสู่ระบบ</h2><div class="mute">
+  "text-align: center; padding: 24px 16px; margin-top: 32px; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; line-height: 1.6;">
+<!-- ส่วนปุ่มเลือกบทบาทผู้ใช้งาน (ย้ายขึ้นมาด้านบน) -->
+<div class="seg">
+  <button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button>
+  <button type="button" data-a="role" data-v="sch">โรงเรียน</button>
 </div>
+
+<!-- ส่วนท้ายเว็บ / Footer (ย้ายลงมาไว้ด้านล่างสุด และเว้นวรรคข้อความแล้ว) -->
+<div style="text-align: center; padding: 24px 16px; margin-top: 32px; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; line-height: 1.6;">
+  ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ <strong>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</strong>
+</div>
+
   <div class="seg"><button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button><button type="button" data-a="role" data-v="teacher">ครู</button></div>
   <input type="hidden" name="role" value="sup">
   <div id="lt" hidden><label>ชื่อ-สกุล (ตามที่ ศน. ลงทะเบียน)</label><input name="name" autocomplete="username"><label>รหัส PIN</label><input name="pin" type="password" inputmode="numeric" autocomplete="current-password"></div>
