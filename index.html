@@ -91,7 +91,8 @@ footer{text-align:center;padding:24px 16px;margin-top:16px;color:#64748b;font-si
   กลุ่มงานพัฒนาคุณภาพและมาตรฐานการศึกษา สำนักงานการศึกษาเอกชนจังหวัดนราธิวาส
 </footer>
 <script>
-const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwh1UxoEBbksFJmxyYI_q97Uwit9CstoTBRt_cxyOHCdSovI-UgXsfIO0CLppuO6iwVkA/exec',
+const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwh1UxoEBbksFJmxyYI_q97Uwit9CstoTBRt_cxyOHCdSovI-UgXsfIO0CLppuO6iwVkA/exec';
+const RUBRIC = [
  'เกริ่นนำเข้าสู่บทเรียน มีการกำหนดเป้าหมายการเรียนรู้ที่ชัดเจน',
  'ตั้งคำถามเพื่อสร้างการเรียนรู้ มีการตั้งคำถามกระตุ้นการคิดขั้นสูง เช่น คิดวิเคราะห์ สังเคราะห์ ประเมินค่า และสร้างสรรค์',
  'จัดกิจกรรมให้นักเรียนลงมือคิด มีการกำหนดสถานการณ์ เชื่อมโยงเนื้อหากับสถานการณ์จริงและบริบทใกล้ตัวเพื่อแก้ปัญหา เรียนรู้ด้วยการลงมือปฏิบัติจริง และทำงานร่วมกัน',
@@ -176,11 +177,11 @@ function loginHTML() {
   return `<form class="login" data-f="login">
     <p class="intro"><strong>ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ</strong><br><strong>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</strong></p>
     <h2>เข้าสู่ระบบ</h2>
-    <div class="seg"><button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button><button type="button" data-a="role" data-v="teacher">ครู</button><button type="button" data-a="role" data-v="head">ผู้บริหารโรงเรียน</button></div>
+    <div class="seg"><button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button><button type="button" data-a="role" data-v="teacher">ครู</button><button type="button" data-a="role" data-v="head">โรงเรียน</button></div>
     <input type="hidden" name="role" value="sup">
     <div id="lt" hidden><label for="l-name">ชื่อ-สกุล</label><input id="l-name" name="name" autocomplete="username" disabled><label for="l-pin">รหัสผ่าน</label><input id="l-pin" name="pin" type="password" autocomplete="current-password" disabled></div>
     <div id="ls"><label for="l-pw">รหัสผ่าน</label><input id="l-pw" name="password" type="password" autocomplete="current-password"></div>
-    <div class="row" style="margin-top:16px"><button class="btn sp">เข้าสู่ระบบ</button><button type="button" class="btn alt" data-a="cfg" title="ตั้งค่า URL">⚙ ตั้งค่า</button></div></form>`;
+    <div class="row" style="margin-top:16px"><button class="btn sp">เข้าสู่ระบบ</button><button type="button" class="btn alt" data-a="forgot">ลืมรหัสผ่าน</button></div></form>`;
 }
 
 /* ---------- ภาพรวม ---------- */
@@ -423,7 +424,15 @@ const A = {
     $('#lt').querySelectorAll('input').forEach(i => i.disabled = sup);
     $('#ls').querySelectorAll('input').forEach(i => i.disabled = !sup);
   },
-  cfg: () => { const u = prompt('วาง URL ของ Web App (ลงท้ายด้วย /exec)', GAS); if (u !== null) { GAS = u.trim(); localStorage.setItem('gas', GAS); toast('บันทึก URL แล้ว'); } },
+  forgot: () => {
+    const r = (document.querySelector('[name=role]') || {}).value || 'sup';
+    const m = {
+      teacher: ['ครู', 'ระบบเก็บรหัสผ่านแบบเข้ารหัส จึงไม่สามารถแสดงรหัสเดิมได้ กรุณาติดต่อศึกษานิเทศก์เพื่อตั้งรหัสผ่านใหม่ให้ (แท็บ “รายชื่อครู” > แก้ไข > ตั้งรหัสผ่านใหม่)'],
+      head: ['โรงเรียน', 'กรุณาติดต่อศึกษานิเทศก์เพื่อตั้งรหัสโรงเรียนใหม่ให้ (แท็บ “รหัสโรงเรียน” > แก้ไข > ตั้งรหัสใหม่)'],
+      sup: ['ศึกษานิเทศก์', 'ผู้ดูแลระบบตั้งรหัสใหม่ได้โดยแก้ค่า NEW_PASSWORD ในฟังก์ชัน setSupPassword ของ Google Apps Script แล้วกดรันหนึ่งครั้ง']
+    }[r] || [];
+    open(`<h2>ลืมรหัสผ่าน (${esc(m[0])})</h2><p>${esc(m[1])}</p><div class="row" style="margin-top:16px"><button type="button" class="btn" data-a="close">ปิด</button></div>`);
+  },
   logout: async () => { try { await api({action:'logout'}); } catch (e) {} S = null; D = {}; sessionStorage.removeItem('s'); render(); },
   close: () => dlg.close(),
   print: () => window.print(),
