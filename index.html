@@ -101,6 +101,7 @@ const RUBRIC = [
  'เชื่อมโยงความคิดเห็นของนักเรียนสู่การสรุปแนวคิดหลักของบทเรียน',
  'วัดและประเมินผลการคิดขั้นสูงอย่างเหมาะสม มีเครื่องมือและเกณฑ์การวัดผลที่สอดคล้องกับจุดประสงค์การเรียนรู้'];
 const SHORT = ['เกริ่นนำและเป้าหมาย','ตั้งคำถามกระตุ้นคิด','กิจกรรมลงมือคิด','เปิดโอกาสแสดงความคิดเห็น','ฟัง สรุป สะท้อนคิด','ลำดับความคิดสู่ข้อสรุป','เชื่อมโยงสู่แนวคิดหลัก','วัดผลการคิดขั้นสูง'];
+const SUP_NAME = 'นางสาวฮานีดา เมาะมิง', SUP_POS = 'ศึกษานิเทศก์';
 const PHASE = ['ก่อนสังเกตการสอน','สังเกตการสอน','สะท้อนผลและโค้ช'];
 let GAS = localStorage.getItem('gas') || DEFAULT_GAS_URL;
 let S = JSON.parse(sessionStorage.getItem('s') || 'null'), D = {}, tab = '', q = '';
@@ -217,7 +218,7 @@ function obsForm(r = {}) {
   <div><label>ระดับชั้น</label><input name="grade" value="${esc(r.grade)}"></div>
   <div><label>ช่วงการนิเทศ</label><select name="phase">${PHASE.map(p => `<option ${r.phase === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
   <div><label>เรื่อง / หน่วยการเรียนรู้</label><input name="topic" value="${esc(r.topic)}"></div></div>
-  <h3>ประเมินสมรรถนะการจัดการเรียนรู้ (1 = ควรปรับปรุง … 4 = ดีเยี่ยม)</h3>
+  <h3>ประเมินการจัดการเรียนรู้ (1 = ควรปรับปรุง … 4 = ดีเยี่ยม)</h3>
   ${RUBRIC.map((t, i) => `<div class="rub"><span>${i + 1}. ${t}</span><span class="opt">${[1,2,3,4].map(n => `<label><input type="radio" name="s${i}" value="${n}" ${sc[i] === n ? 'checked' : ''}>${n}</label>`).join('')}</span></div>`).join('')}
   <h3>การโค้ช (GROW)</h3>
   <label>จุดเด่นที่พบ</label><textarea name="strengths">${esc(r.strengths)}</textarea>
@@ -230,7 +231,7 @@ function obsForm(r = {}) {
   <h3>ลงชื่อรับรอง</h3>
   <p class="mute">เซ็นบนหน้าจอด้วยนิ้วหรือเมาส์ได้เลย หรือเว้นว่างไว้แล้วเซ็นสดบนกระดาษหลังพิมพ์ (ลายมือชื่อจะแสดงในรายงานที่พิมพ์)</p>
   <div class="g2">
-   <div class="padbox"><b>ผู้นิเทศ</b><label>ชื่อ-สกุล</label><input name="supName" value="${esc(r.supName || localStorage.getItem('supName') || '')}"><canvas class="pad" data-k="sup" width="450" height="150" aria-label="ลายมือชื่อผู้นิเทศ"></canvas><button type="button" class="btn alt sm" data-a="clrpad" data-k="sup" style="margin-top:6px">ล้างลายมือชื่อ</button></div>
+   <div class="padbox"><b>ผู้นิเทศ</b><div class="mute">${SUP_NAME} · ตำแหน่ง${SUP_POS}</div><canvas class="pad" data-k="sup" width="450" height="150" aria-label="ลายมือชื่อผู้นิเทศ"></canvas><button type="button" class="btn alt sm" data-a="clrpad" data-k="sup" style="margin-top:6px">ล้างลายมือชื่อ</button></div>
    <div class="padbox"><b>ผู้รับการนิเทศ (ครู)</b><div class="mute">ชื่อ: ใช้ชื่อครูที่เลือกด้านบน</div><canvas class="pad" data-k="teacher" width="450" height="150" aria-label="ลายมือชื่อผู้รับการนิเทศ"></canvas><button type="button" class="btn alt sm" data-a="clrpad" data-k="teacher" style="margin-top:6px">ล้างลายมือชื่อ</button></div>
    <div class="padbox"><b>ผู้อำนวยการโรงเรียน</b><label>ชื่อ-สกุล</label><input name="headName" value="${esc(r.headName)}"><canvas class="pad" data-k="head" width="450" height="150" aria-label="ลายมือชื่อผู้อำนวยการโรงเรียน"></canvas><button type="button" class="btn alt sm" data-a="clrpad" data-k="head" style="margin-top:6px">ล้างลายมือชื่อ</button></div>
   </div>
@@ -264,9 +265,9 @@ function cheer(a) {
     : a >= 1.5 ? ['💪', 'มีพื้นฐานที่ดีแล้ว! ทุกก้าวเล็ก ๆ คือการเติบโต เราจะเดินไปด้วยกัน']
     : ['🌱', 'ทุกการเริ่มต้นมีคุณค่า! ขอบคุณที่เปิดห้องเรียนเพื่อเรียนรู้ร่วมกัน ศน. พร้อมเป็นเพื่อนร่วมทางของคุณครู'];
 }
-function sigBlock(img, name, role) {
+function sigBlock(img, name, role, pos) {
   return `<div class="sig"><div class="box">${img ? `<img src="${esc(img)}" alt="ลายมือชื่อ">` : ''}</div>
-   <div>ลงชื่อ ${img ? '' : '.............................................'}</div><div>(${name ? esc(name) : '.............................................'})</div><div><b>${role}</b></div></div>`;
+   <div>ลงชื่อ ${img ? '' : '.............................................'}</div><div>(${name ? esc(name) : '.............................................'})</div><div><b>${role}</b></div>${pos ? `<div>${pos}</div>` : ''}</div>`;
 }
 function obsView(r) {
   const sc = r.scores || [], avg = r._avg || 0, [em, msg] = cheer(avg), st = Math.max(0, Math.min(4, Math.round(avg)));
@@ -291,7 +292,7 @@ function obsView(r) {
   ${[['strengths','จุดเด่น'],['goal','เป้าหมาย (Goal)'],['reality','สภาพที่เป็นอยู่ (Reality)'],['options','แนวทางพัฒนา (Options)'],['will','ข้อตกลง (Will)']].map(([k, t]) => r[k] ? `<h3>${t}</h3><p>${nl(r[k])}</p>` : '').join('')}
   ${r.next ? `<p><b>นัดติดตาม:</b> ${fd(r.next)}</p>` : ''}
   <p style="text-align:center;margin:18px 0 0">💛 ขอบคุณคุณครูที่ร่วมพัฒนาการเรียนรู้ของผู้เรียนด้วยกัน 💛</p>
-  <div class="sigs">${sigBlock((r.sig || {}).sup, r.supName, 'นางสาวฮานีดา เมาะมิง ศึกษานิเทศก์')}${sigBlock((r.sig || {}).teacher, r.teacher, 'ผู้รับการนิเทศ')}${sigBlock((r.sig || {}).head, r.headName, 'ผู้อำนวยการโรงเรียน' + (r.school ? esc(r.school) : 'โรงเรียน'))}</div>
+  <div class="sigs">${sigBlock((r.sig || {}).sup, SUP_NAME, 'ผู้นิเทศ', 'ตำแหน่ง' + SUP_POS)}${sigBlock((r.sig || {}).teacher, r.teacher, 'ผู้รับการนิเทศ')}${sigBlock((r.sig || {}).head, r.headName, 'ผู้อำนวยการ' + (/^โรงเรียน/.test(r.school || '') ? '' : 'โรงเรียน') + esc(r.school || ''))}</div>
   <p class="mute" style="text-align:center;margin-top:14px">วันที่ ${fd(r.date)}</p>`;
 }
 function initPads(r = {}) {
@@ -421,8 +422,7 @@ const F = {
     const r = {...old, id: f.get('id') || undefined, tuid: t.id, teacher: t.name, school: t.school, date: f.get('date'), subject: f.get('subject'), grade: f.get('grade'), phase: f.get('phase'), topic: f.get('topic'),
       scores, _avg: c.avg, strengths: f.get('strengths'), goal: f.get('goal'), reality: f.get('reality'), options: f.get('options'), will: f.get('will'), next: f.get('next'), ret: f.get('ret') === '1'};
     const sig = {}; form.querySelectorAll('canvas.pad').forEach(c => { if (c.dataset.has === '1') sig[c.dataset.k] = c.toDataURL('image/png'); });
-    r.sig = sig; r.supName = (f.get('supName') || '').trim(); r.headName = (f.get('headName') || '').trim();
-    try { localStorage.setItem('supName', r.supName); } catch (e) {}
+    r.sig = sig; r.supName = SUP_NAME; r.headName = (f.get('headName') || '').trim();
     if (JSON.stringify(r).length > 45000) return toast('ลายมือชื่อมีขนาดใหญ่เกินไป กรุณาล้างแล้วเซ็นใหม่ให้เส้นสั้นลง', true);
     if (await run(() => save('obs', r), 'บันทึกแล้ว')) { dlg.close(); render(); }
   },
