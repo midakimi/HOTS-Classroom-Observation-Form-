@@ -17,7 +17,7 @@ header small{display:block;font-weight:400;opacity:.8;font-size:13px}
 nav{display:flex;gap:4px;padding:8px 16px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto}
 nav button{border:0;background:none;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap;color:var(--mute);font-weight:500}
 nav button.on{background:var(--sea);color:#fff}
-main{max-width:1060px;margin:0 auto;padding:20px 16px 60px}
+main{max-width:1060px;margin:0 auto;padding:20px 16px 40px}
 h2{margin:0 0 14px;font-size:22px}
 h3{margin:18px 0 8px;font-size:17px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:14px}
@@ -53,19 +53,27 @@ dialog{border:0;border-radius:14px;padding:20px;width:min(760px,94vw);max-height
 dialog::backdrop{background:#0a3f4ca0}
 #toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--sea2);color:#fff;padding:10px 20px;border-radius:99px;display:none;z-index:99}
 #toast.bad{background:var(--bad)}
-.login{max-width:420px;margin:7vh auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px;border-top:6px solid var(--sun)}
+.login{max-width:420px;margin:7vh auto 0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:26px;border-top:6px solid var(--sun)}
+.login .intro{text-align:center;color:var(--mute);line-height:1.6;margin-bottom:8px}
+.login h2{text-align:center;color:var(--sea2);margin-top:8px}
 .seg{display:flex;border:1px solid var(--sea);border-radius:8px;overflow:hidden;margin:12px 0}
 .seg button{flex:1;border:0;background:#fff;color:var(--sea);padding:8px;cursor:pointer;font-weight:600}
 .seg button.on{background:var(--sea);color:#fff}
 .cm{border-left:3px solid var(--line);padding:2px 10px;margin:6px 0 6px 6px;font-size:15px}
-@media print{header,nav,.noprint,#toast{display:none!important}body{background:#fff}dialog{box-shadow:none;width:100%;max-height:none}dialog::backdrop{display:none}main{padding:0}}
+footer{text-align:center;padding:24px 16px;margin-top:16px;color:#64748b;font-size:13px;border-top:1px solid #e2e8f0;line-height:1.6}
+@media print{header,nav,footer,.noprint,#toast{display:none!important}body{background:#fff}body:has(dialog[open]) #app{display:none}dialog{box-shadow:none;width:100%;max-height:none}dialog::backdrop{display:none}main{padding:0}}
 @media (prefers-reduced-motion:no-preference){#toast{transition:opacity .2s}}
 </style>
 </head>
 <body>
 <div id="app"></div>
-<dialog id="dlg"></dialog>
+<dialog id="dlg" aria-label="หน้าต่างรายละเอียด"></dialog>
 <div id="toast" role="status"></div>
+<footer>
+  พัฒนาโดย: <strong>นางสาวฮานีดา เมาะมิง</strong><br>
+  ตำแหน่งศึกษานิเทศก์ วิทยฐานะศึกษานิเทศก์ชำนาญการพิเศษ<br>
+  กลุ่มงานพัฒนาคุณภาพและมาตรฐานการศึกษา สำนักงานการศึกษาเอกชนจังหวัดนราธิวาส
+</footer>
 <script>
 const DEFAULT_GAS_URL = 'https://script.google.com/macros/s/AKfycbwh1UxoEBbksFJmxyYI_q97Uwit9CstoTBRt_cxyOHCdSovI-UgXsfIO0CLppuO6iwVkA/exec';
 const RUBRIC = [
@@ -81,13 +89,17 @@ const PHASE = ['ก่อนสังเกตการสอน','สังเ�
 let GAS = localStorage.getItem('gas') || DEFAULT_GAS_URL;
 let S = JSON.parse(sessionStorage.getItem('s') || 'null'), D = {}, tab = '', q = '';
 const $ = s => document.querySelector(s);
+// [แก้] เดิมไม่ได้ประกาศ L ทำให้ทุกหน้าพัง
+const L = c => D[c] || [];
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-const today = () => new Date().toISOString().slice(0, 10);
+// [แก้] เดิมใช้ UTC ทำให้ช่วง 00:00–07:00 น. ได้วันที่เมื่อวาน — เปลี่ยนเป็นเวลาท้องถิ่น
+const today = () => { const d = new Date(); return new Date(d - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10); };
 const fd = d => d ? new Date(d).toLocaleDateString('th-TH', {day:'numeric', month:'short', year:'2-digit'}) : '-';
 const isSup = () => S && S.role === 'sup';
 const myEv = () => 'evid/' + S.uid + '/items';
 const nl = s => esc(s).replace(/\n/g, '<br>');
+const mine = x => x.tuid === S.uid || String(x.teacher || '').trim() === S.name;
 
 function toast(m, bad) { const t = $('#toast'); t.textContent = m; t.className = bad ? 'bad' : ''; t.style.display = 'block'; clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', 3200); }
 
@@ -116,10 +128,9 @@ async function run(fn, ok) {
 }
 
 /* ---------- คำนวณคะแนน ---------- */
-function calc(sc, qs) {
+function calc(sc) {
   const v = sc.filter(x => x > 0), avg = v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0;
-  const tot = qs.reduce((a, b) => a + b, 0), hq = tot ? (qs[3] + qs[4] + qs[5]) / tot * 100 : 0;
-  return {avg: +avg.toFixed(2), hq: +hq.toFixed(1)};
+  return {avg: +avg.toFixed(2)};
 }
 const lvl = a => a >= 3.5 ? ['ดีเยี่ยม','ok'] : a >= 2.5 ? ['ดี','ok'] : a >= 1.5 ? ['พอใช้','warn'] : ['ควรปรับปรุง','bad'];
 const lvTag = a => { const l = lvl(a); return `<span class="tag ${l[1]}">${a.toFixed(2)} ${l[0]}</span>`; };
@@ -139,21 +150,14 @@ function render() {
     <main>${({dash, obs, sched, roster, plc, evid})[tab]()}</main>`;
 }
 function loginHTML() {
-  return `<form class="login" data-f="login" style="border-top: 10px solid #1d4ed8; border-radius: 12px; padding-top: 10px;">
-    <div class="mute"><div style="text-align: center; padding: 20px 16px 12px 16px;">
-      <p style="margin: 0; color: #52606d; font-size: 16px; line-height: 1.6;">
-        <strong>ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ</strong><br>
-        <strong>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</strong>
-      </p>
-    </div></div>
-    <h2 style="text-align: center !important; width: 100%; display: block; color: #1e3a8a; margin-top: 8px;">เข้าสู่ระบบ</h2>
-<div class="seg">
-</div>
-  <div class="seg"><button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button><button type="button" data-a="role" data-v="teacher">ครู</button></div>
-  <input type="hidden" name="role" value="sup">
-  <div id="lt" hidden><label>ชื่อผู้ใช้งาน</label><input name="name" autocomplete="username"><label>รหัสผ่าน</label><input name="pin" type="password" inputmode="numeric" autocomplete="current-password"></div>
-  <div id="ls"><label>รหัสผ่าน</label><input name="password" type="password" autocomplete="current-password"></div>
-  <div class="row" style="margin-top:16px"><button class="btn sp">เข้าสู่ระบบ</button><button type="button" class="btn alt" data-a="cfg" title="ตั้งค่า URL">⚙ ตั้งค่า</button></div></form>`;
+  return `<form class="login" data-f="login">
+    <p class="intro"><strong>ระบบบันทึกการนิเทศครูโรงเรียนเอกชนในระบบ</strong><br><strong>สังกัดสำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</strong></p>
+    <h2>เข้าสู่ระบบ</h2>
+    <div class="seg"><button type="button" data-a="role" data-v="sup" class="on">ศึกษานิเทศก์</button><button type="button" data-a="role" data-v="teacher">ครู</button></div>
+    <input type="hidden" name="role" value="sup">
+    <div id="lt" hidden><label for="l-name">ชื่อ-สกุล</label><input id="l-name" name="name" autocomplete="username" disabled><label for="l-pin">รหัสผ่าน</label><input id="l-pin" name="pin" type="password" autocomplete="current-password" disabled></div>
+    <div id="ls"><label for="l-pw">รหัสผ่าน</label><input id="l-pw" name="password" type="password" autocomplete="current-password"></div>
+    <div class="row" style="margin-top:16px"><button class="btn sp">เข้าสู่ระบบ</button><button type="button" class="btn alt" data-a="cfg" title="ตั้งค่า URL">⚙ ตั้งค่า</button></div></form>`;
 }
 
 /* ---------- ภาพรวม ---------- */
@@ -162,33 +166,34 @@ function dash() {
   const by = {}; O.forEach(x => (by[x.school || '-'] = by[x.school || '-'] || []).push(x._avg || 0));
   const rows = T.map(t => {
     const o = O.filter(x => tmatch(x, t)).sort((a, b) => (a.date || '').localeCompare(b.date || ''));
-    const f = o[0], l = o[o.length - 1];
-    return `<tr><td>${esc(t.name)}<div class="mute">${esc(t.school)}</div></td><td>${o.length}</td><td>${l ? lvTag(l._avg) : '<span class="tag warn">ยังไม่นิเทศ</span>'}</td>
-      <td>${l ? l._hq + '%' + (o.length > 1 ? ` <span class="mute">(จาก ${f._hq}%)</span>` : '') : '-'}</td></tr>`;
+    const l = o[o.length - 1];
+    return `<tr><td>${esc(t.name)}<div class="mute">${esc(t.school)}</div></td><td>${o.length}</td><td>${l ? lvTag(l._avg || 0) : '<span class="tag warn">ยังไม่นิเทศ</span>'}</td></tr>`;
   }).join('');
   return `<h2>ภาพรวม</h2><div class="stats">
    <div class="stat"><b>${T.length}</b>ครูในระบบ</div><div class="stat"><b>${O.length}</b>ครั้งที่นิเทศ</div>
    <div class="stat"><b>${O.filter(x => x.ret).length}</b>ส่งผลคืนครูแล้ว</div><div class="stat"><b>${up.length}</b>นัดโค้ชที่จะถึง</div></div>
    <div class="card"><h3 style="margin-top:0">คะแนนเฉลี่ยรายโรงเรียน (เต็ม 4)</h3>${Object.keys(by).length ? Object.entries(by).map(([s, a]) => { const m = a.reduce((x, y) => x + y, 0) / a.length;
      return `<div class="row" style="margin:6px 0"><span style="width:200px">${esc(s)}</span><div class="bar sp"><i style="width:${m / 4 * 100}%"></i></div><b>${m.toFixed(2)}</b></div>`; }).join('') : '<div class="empty">ยังไม่มีผลการนิเทศ เริ่มที่แท็บ “บันทึกการนิเทศ”</div>'}</div>
-   <div class="card wrap"><h3 style="margin-top:0">ความก้าวหน้ารายครู</h3><table><tr><th>ครู</th><th>ครั้ง</th><th>คะแนนล่าสุด</th><th>คำถามขั้นสูง</th></tr>${rows || '<tr><td colspan="4" class="mute">เพิ่มรายชื่อครูที่แท็บ “รายชื่อครู”</td></tr>'}</table></div>`;
+   <div class="card wrap"><h3 style="margin-top:0">ความก้าวหน้ารายครู</h3><table><tr><th>ครู</th><th>ครั้ง</th><th>คะแนนล่าสุด</th></tr>${rows || '<tr><td colspan="3" class="mute">เพิ่มรายชื่อครูที่แท็บ “รายชื่อครู”</td></tr>'}</table></div>`;
 }
 
 /* ---------- การนิเทศ ---------- */
 function obs() {
   let O = L('obs').slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-  if (q) O = O.filter(x => (x.teacher + x.school + x.subject).includes(q));
+  // ครูเห็นเฉพาะผลของตนเองที่ ศน. ส่งคืนแล้ว (ฝั่งเซิร์ฟเวอร์ควรกรองซ้ำด้วย)
+  if (!isSup()) O = O.filter(x => x.ret && mine(x));
+  if (q) O = O.filter(x => ((x.teacher || '') + (x.school || '') + (x.subject || '')).includes(q));
   const body = O.map(r => `<tr><td>${fd(r.date)}</td><td>${esc(r.teacher)}<div class="mute">${esc(r.school)}</div></td><td>${esc(r.subject)}<div class="mute">${esc(r.phase)}</div></td>
-   <td>${lvTag(r._avg || 0)}</td><td>${r._hq ?? 0}%</td>${isSup() ? `<td>${r.ret ? '<span class="tag ok">ส่งแล้ว</span>' : '<span class="tag">ร่าง</span>'}</td>` : ''}
-   <td class="row"><button class="btn alt sm" data-a="vobs" data-id="${r.id}">ดู</button>${isSup() ? `<button class="btn alt sm" data-a="eobs" data-id="${r.id}">แก้ไข</button><button class="btn alt sm" data-a="ret" data-id="${r.id}">${r.ret ? 'ถอนคืน' : 'ส่งคืนครู'}</button><button class="btn bad sm" data-a="dobs" data-id="${r.id}">ลบ</button>` : ''}</td></tr>`).join('');
+   <td>${lvTag(r._avg || 0)}</td>${isSup() ? `<td>${r.ret ? '<span class="tag ok">ส่งแล้ว</span>' : '<span class="tag">ร่าง</span>'}</td>` : ''}
+   <td><div class="row"><button class="btn alt sm" data-a="vobs" data-id="${r.id}">ดู</button>${isSup() ? `<button class="btn alt sm" data-a="eobs" data-id="${r.id}">แก้ไข</button><button class="btn alt sm" data-a="ret" data-id="${r.id}">${r.ret ? 'ถอนคืน' : 'ส่งคืนครู'}</button><button class="btn bad sm" data-a="dobs" data-id="${r.id}">ลบ</button>` : ''}</div></td></tr>`).join('');
   return `<h2>${isSup() ? 'บันทึกการนิเทศ' : 'ผลการนิเทศของฉัน'}</h2><div class="row noprint" style="margin-bottom:12px">
-   <input id="q" value="${esc(q)}" placeholder="ค้นหาชื่อครู โรงเรียน วิชา" style="max-width:280px"><span class="sp"></span>
+   <input id="q" value="${esc(q)}" placeholder="ค้นหาชื่อครู โรงเรียน วิชา" style="max-width:280px" aria-label="ค้นหา"><span class="sp"></span>
    ${isSup() ? '<button class="btn alt" data-a="csv">ส่งออก CSV</button><button class="btn" data-a="nobs">+ บันทึกการนิเทศ</button>' : ''}</div>
-   ${O.length ? `<div class="card wrap"><table><tr><th>วันที่</th><th>ครู</th><th>วิชา/ช่วง</th><th>คะแนน</th><th>คำถามขั้นสูง</th>${isSup() ? '<th>สถานะ</th>' : ''}<th></th></tr>${body}</table></div>`
+   ${O.length ? `<div class="card wrap"><table><tr><th>วันที่</th><th>ครู</th><th>วิชา/ช่วง</th><th>คะแนน</th>${isSup() ? '<th>สถานะ</th>' : ''}<th></th></tr>${body}</table></div>`
     : `<div class="empty">${isSup() ? 'ยังไม่มีบันทึก กด “+ บันทึกการนิเทศ” เพื่อเริ่ม' : 'ยังไม่มีผลการนิเทศที่ ศน. ส่งคืน'}</div>`}`;
 }
 function obsForm(r = {}) {
-  const T = L('roster'), sc = r.scores || [], qs = r.q || [];
+  const T = L('roster'), sc = r.scores || [];
   return `<form data-f="obs"><h2>${r.id ? 'แก้ไข' : 'บันทึก'}การนิเทศ</h2><input type="hidden" name="id" value="${esc(r.id)}">
   <div class="g2"><div><label>ครูผู้รับการนิเทศ</label><select name="tuid" required><option value="">เลือกครู</option>${T.map(t => `<option value="${esc(t.id)}" ${r.tuid === t.id ? 'selected' : ''}>${esc(t.name)} (${esc(t.school)})</option>`).join('')}</select></div>
   <div><label>วันที่</label><input type="date" name="date" value="${r.date || today()}" required></div>
@@ -198,7 +203,6 @@ function obsForm(r = {}) {
   <div><label>เรื่อง / หน่วยการเรียนรู้</label><input name="topic" value="${esc(r.topic)}"></div></div>
   <h3>ประเมินการจัดการเรียนรู้เชิง HOTS (1 = ควรปรับปรุง … 4 = ดีเยี่ยม)</h3>
   ${RUBRIC.map((t, i) => `<div class="rub"><span>${i + 1}. ${t}</span><span class="opt">${[1,2,3,4].map(n => `<label><input type="radio" name="s${i}" value="${n}" ${sc[i] === n ? 'checked' : ''}>${n}</label>`).join('')}</span></div>`).join('')}
-  <h3>จำนวนคำถามของครูตามระดับการคิด (บลูม)</h3><div class="g2">${BLOOM.map((b, i) => `<div><label>${b}${i > 2 ? ' (ขั้นสูง)' : ''}</label><input type="number" min="0" name="q${i}" value="${qs[i] || 0}"></div>`).join('')}</div>
   <h3>การโค้ช (GROW)</h3>
   <label>จุดเด่นที่พบ</label><textarea name="strengths">${esc(r.strengths)}</textarea>
   <label>เป้าหมาย (Goal)</label><textarea name="goal">${esc(r.goal)}</textarea>
@@ -212,20 +216,20 @@ function obsForm(r = {}) {
 function obsView(r) {
   return `<div class="noprint row" style="margin-bottom:8px"><button class="btn" data-a="print">พิมพ์ / บันทึก PDF</button><button class="btn alt" data-a="close">ปิด</button></div>
   <h2>รายงานผลการนิเทศ HOTS</h2><p>ครู: <b>${esc(r.teacher)}</b> · ${esc(r.school)}<br>วิชา: ${esc(r.subject)} ${esc(r.grade)} · เรื่อง: ${esc(r.topic) || '-'}<br>วันที่ ${fd(r.date)} · ${esc(r.phase)}</p>
-  <div class="stats"><div class="stat"><b>${(r._avg || 0).toFixed(2)}</b>คะแนนเฉลี่ย ${lvl(r._avg || 0)[0]}</div><div class="stat"><b>${r._hq || 0}%</b>คำถามขั้นสูง</div></div>
+  <div class="stats"><div class="stat"><b>${(r._avg || 0).toFixed(2)}</b>คะแนนเฉลี่ย ${lvl(r._avg || 0)[0]}</div></div>
   <table>${RUBRIC.map((t, i) => `<tr><td>${i + 1}. ${t}</td><td><b>${(r.scores || [])[i] || '-'}</b></td></tr>`).join('')}</table>
-  <table style="margin-top:10px"><tr>${BLOOM.map(b => `<th>${b}</th>`).join('')}</tr><tr>${BLOOM.map((b, i) => `<td>${(r.q || [])[i] || 0}</td>`).join('')}</tr></table>
   ${[['strengths','จุดเด่น'],['goal','เป้าหมาย (Goal)'],['reality','สภาพที่เป็นอยู่ (Reality)'],['options','แนวทางพัฒนา (Options)'],['will','ข้อตกลง (Will)']].map(([k, t]) => r[k] ? `<h3>${t}</h3><p>${nl(r[k])}</p>` : '').join('')}
   ${r.next ? `<p><b>นัดติดตาม:</b> ${fd(r.next)}</p>` : ''}`;
 }
 
 /* ---------- นัดโค้ช ---------- */
 function sched() {
-  const A = L('sched').slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  let A = L('sched').slice().sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  if (!isSup()) A = A.filter(mine);
   return `<h2>นัดโค้ช</h2>${isSup() ? '<div class="row noprint" style="margin-bottom:12px"><span class="sp"></span><button class="btn" data-a="nsch">+ นัดหมาย</button></div>' : ''}
   ${A.length ? `<div class="card wrap"><table><tr><th>วันที่</th><th>เวลา</th><th>ครู</th><th>หัวข้อ/สถานที่</th><th>สถานะ</th>${isSup() ? '<th></th>' : ''}</tr>${A.map(x => `<tr><td>${fd(x.date)}</td><td>${esc(x.time)}</td><td>${esc(x.teacher)}</td><td>${esc(x.topic)}<div class="mute">${esc(x.place)}</div></td>
    <td><span class="tag ${x.status === 'เสร็จสิ้น' ? 'ok' : x.status === 'ยกเลิก' ? 'bad' : 'warn'}">${esc(x.status)}</span></td>
-   ${isSup() ? `<td class="row"><button class="btn alt sm" data-a="esch" data-id="${x.id}">แก้ไข</button><button class="btn bad sm" data-a="dsch" data-id="${x.id}">ลบ</button></td>` : ''}</tr>`).join('')}</table></div>` : '<div class="empty">ยังไม่มีนัดโค้ช</div>'}`;
+   ${isSup() ? `<td><div class="row"><button class="btn alt sm" data-a="esch" data-id="${x.id}">แก้ไข</button><button class="btn bad sm" data-a="dsch" data-id="${x.id}">ลบ</button></div></td>` : ''}</tr>`).join('')}</table></div>` : '<div class="empty">ยังไม่มีนัดโค้ช</div>'}`;
 }
 function schForm(r = {}) {
   return `<form data-f="sched"><h2>${r.id ? 'แก้ไข' : 'เพิ่ม'}นัดโค้ช</h2><input type="hidden" name="id" value="${esc(r.id)}">
@@ -241,7 +245,7 @@ function roster() {
   const T = L('roster');
   return `<h2>รายชื่อครู</h2><div class="row noprint" style="margin-bottom:12px"><span class="mute sp">ครูใช้ชื่อ-นามสกุล และรหัสผ่านที่กำหนดไว้เพื่อเข้าสู่ระบบ</span><button class="btn" data-a="nros">+ เพิ่มครู</button></div>
   ${T.length ? `<div class="card wrap"><table><tr><th>ชื่อ-สกุล</th><th>โรงเรียน</th><th>วิชา</th><th>รหัสผ่าน</th><th></th></tr>${T.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.school)}</td><td>${esc(t.subject)}</td><td>${esc(t.pin)}</td>
-   <td class="row"><button class="btn alt sm" data-a="eros" data-id="${t.id}">แก้ไข</button><button class="btn bad sm" data-a="dros" data-id="${t.id}">ลบ</button></td></tr>`).join('')}</table></div>` : '<div class="empty">ยังไม่มีรายชื่อครู กด “+ เพิ่มครู”</div>'}`;
+   <td><div class="row"><button class="btn alt sm" data-a="eros" data-id="${t.id}">แก้ไข</button><button class="btn bad sm" data-a="dros" data-id="${t.id}">ลบ</button></div></td></tr>`).join('')}</table></div>` : '<div class="empty">ยังไม่มีรายชื่อครู กด “+ เพิ่มครู”</div>'}`;
 }
 function rosForm(r = {}) {
   return `<form data-f="roster"><h2>${r.id ? 'แก้ไข' : 'เพิ่ม'}ครู</h2><input type="hidden" name="id" value="${esc(r.id)}">
@@ -258,7 +262,7 @@ function plc() {
   ${P.length ? P.map(p => `<div class="card"><div class="row"><b class="sp">${esc(p.title)}</b>${isSup() || p.uid === S.uid ? `<button class="btn bad sm" data-a="dplc" data-id="${p.id}">ลบ</button>` : ''}</div>
    <div class="mute">${esc(p.name || 'ศึกษานิเทศก์')} · ${fd(p.date)}</div><p>${nl(p.body)}</p>
    ${L('plccm').filter(c => c.pid === p.id).sort((a, b) => (a.date || '').localeCompare(b.date || '')).map(c => `<div class="cm"><b>${esc(c.name || 'ศึกษานิเทศก์')}</b> ${nl(c.text)}${isSup() || c.uid === S.uid ? ` <a href="#" data-a="dcm" data-id="${c.id}" class="mute">ลบ</a>` : ''}</div>`).join('')}
-   <form class="row noprint" data-f="cm" style="margin-top:8px"><input type="hidden" name="pid" value="${p.id}"><input name="text" placeholder="แสดงความเห็น" class="sp" required style="flex:1"><button class="btn alt sm">ส่ง</button></form></div>`).join('') : '<div class="empty">ยังไม่มีโพสต์ เริ่มแบ่งปันเป็นคนแรก</div>'}`;
+   <form class="row noprint" data-f="cm" style="margin-top:8px"><input type="hidden" name="pid" value="${p.id}"><input name="text" placeholder="แสดงความเห็น" class="sp" required style="flex:1" aria-label="แสดงความเห็น"><button class="btn alt sm">ส่ง</button></form></div>`).join('') : '<div class="empty">ยังไม่มีโพสต์ เริ่มแบ่งปันเป็นคนแรก</div>'}`;
 }
 
 /* ---------- หลักฐาน ---------- */
@@ -267,7 +271,7 @@ function evid() {
   items.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const nameOf = id => (L('roster').find(t => t.id === id) || {}).name || '';
   return `<h2>${isSup() ? 'หลักฐานการพัฒนาของครู' : 'หลักฐานของฉัน'}</h2>${isSup() ? '' : '<div class="row noprint" style="margin-bottom:12px"><span class="sp mute">แนบลิงก์แผนการสอน ภาพกิจกรรม หรือผลงานนักเรียน (Google Drive ฯลฯ)</span><button class="btn" data-a="nev">+ เพิ่มหลักฐาน</button></div>'}
-  ${items.length ? items.map(x => `<div class="card"><div class="row"><b class="sp">${esc(x.title)}</b><span class="tag">${esc(x.type)}</span>${!isSup() || true ? `<button class="btn bad sm" data-a="dev" data-id="${x.id}" data-t="${esc(x._t || S.uid)}">ลบ</button>` : ''}</div>
+  ${items.length ? items.map(x => `<div class="card"><div class="row"><b class="sp">${esc(x.title)}</b><span class="tag">${esc(x.type)}</span><button class="btn bad sm" data-a="dev" data-id="${x.id}" data-t="${esc(x._t || S.uid)}">ลบ</button></div>
    <div class="mute">${isSup() ? esc(nameOf(x._t)) + ' · ' : ''}${fd(x.date)}</div>${x.note ? `<p>${nl(x.note)}</p>` : ''}${/^https?:\/\//.test(x.link || '') ? `<a href="${esc(x.link)}" target="_blank" rel="noopener">เปิดลิงก์หลักฐาน</a>` : ''}</div>`).join('') : '<div class="empty">ยังไม่มีหลักฐาน</div>'}`;
 }
 function evForm() {
@@ -287,7 +291,10 @@ const refresh = async () => { await run(load); render(); };
 const A = {
   tab: el => { tab = el.dataset.v; q = ''; render(); },
   role: el => { const sup = el.dataset.v === 'sup'; document.querySelectorAll('.seg button').forEach(b => b.classList.toggle('on', b === el));
-    document.querySelector('[name=role]').value = el.dataset.v; $('#lt').hidden = sup; $('#ls').hidden = !sup; },
+    document.querySelector('[name=role]').value = el.dataset.v;
+    $('#lt').hidden = sup; $('#ls').hidden = !sup;
+    $('#lt').querySelectorAll('input').forEach(i => i.disabled = sup);
+    $('#ls').querySelectorAll('input').forEach(i => i.disabled = !sup); },
   cfg: () => { const u = prompt('วาง URL ของ Web App (ลงท้ายด้วย /exec)', GAS); if (u !== null) { GAS = u.trim(); localStorage.setItem('gas', GAS); toast('บันทึก URL แล้ว'); } },
   logout: async () => { try { await api({action:'logout'}); } catch (e) {} S = null; D = {}; sessionStorage.removeItem('s'); render(); },
   close: () => dlg.close(),
@@ -305,13 +312,16 @@ const A = {
   dev: async el => { const c = 'evid/' + el.dataset.t + '/items'; if (confirm('ลบหลักฐานนี้?') && await run(() => del(c, el.dataset.id), 'ลบแล้ว')) render(); },
   csv: () => {
     const h = ['วันที่','ครู','โรงเรียน','วิชา','ช่วง','คะแนนเฉลี่ย','ส่งคืนครู'];
-    const rows = L('obs').map(r => [r.date, r.teacher, r.school, r.subject, r.phase, r._avg, r._hq, r.ret ? 'ใช่' : 'ไม่']);
+    const rows = L('obs').map(r => [r.date, r.teacher, r.school, r.subject, r.phase, r._avg, r.ret ? 'ใช่' : 'ไม่']);
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + [h, ...rows].map(r => r.map(csvEsc).join(',')).join('\n')], {type:'text/csv'}));
     a.download = 'สรุปนิเทศ-' + today() + '.csv'; a.click();
   }
 };
 document.addEventListener('click', e => { const el = e.target.closest('[data-a]'); if (!el) return; e.preventDefault(); A[el.dataset.a] && A[el.dataset.a](el); });
-document.addEventListener('input', e => { if (e.target.id === 'q') { q = e.target.value.trim(); const p = e.target.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); } });
+// [แก้] ค้นหา: ไม่รีเรนเดอร์ระหว่างพิมพ์ภาษาไทยด้วย IME (ทำให้ตัวอักษรหายหรือซ้ำ) รอจนจบ composition
+function doSearch(el) { q = el.value.trim(); const p = el.selectionStart; render(); const n = $('#q'); n.focus(); n.setSelectionRange(p, p); }
+document.addEventListener('input', e => { if (e.target.id === 'q' && !e.isComposing) doSearch(e.target); });
+document.addEventListener('compositionend', e => { if (e.target.id === 'q') doSearch(e.target); });
 
 const F = {
   login: async f => {
@@ -320,14 +330,17 @@ const F = {
   },
   obs: async (f, form) => {
     const t = find('roster', f.get('tuid')), old = find('obs', f.get('id')) || {};
-    const scores = RUBRIC.map((_, i) => +f.get('s' + i) || 0), qs = BLOOM.map((_, i) => +f.get('q' + i) || 0), c = calc(scores, qs);
+    if (!t) return toast('กรุณาเลือกครู', true);
+    const scores = RUBRIC.map((_, i) => +f.get('s' + i) || 0), c = calc(scores);
     if (scores.some(x => !x)) return toast('กรุณาประเมินให้ครบทุกข้อ', true);
     const r = {...old, id: f.get('id') || undefined, tuid: t.id, teacher: t.name, school: t.school, date: f.get('date'), subject: f.get('subject'), grade: f.get('grade'), phase: f.get('phase'), topic: f.get('topic'),
-      scores, q: qs, _avg: c.avg, _hq: c.hq, strengths: f.get('strengths'), goal: f.get('goal'), reality: f.get('reality'), options: f.get('options'), will: f.get('will'), next: f.get('next'), ret: f.get('ret') === '1'};
+      scores, _avg: c.avg, strengths: f.get('strengths'), goal: f.get('goal'), reality: f.get('reality'), options: f.get('options'), will: f.get('will'), next: f.get('next'), ret: f.get('ret') === '1'};
     if (await run(() => save('obs', r), 'บันทึกแล้ว')) { dlg.close(); render(); }
   },
   sched: async f => {
-    const t = find('roster', f.get('tuid')), r = {id: f.get('id') || undefined, tuid: t.id, teacher: t.name, date: f.get('date'), time: f.get('time'), topic: f.get('topic'), place: f.get('place'), status: f.get('status')};
+    const t = find('roster', f.get('tuid'));
+    if (!t) return toast('กรุณาเลือกครู', true);
+    const r = {id: f.get('id') || undefined, tuid: t.id, teacher: t.name, date: f.get('date'), time: f.get('time'), topic: f.get('topic'), place: f.get('place'), status: f.get('status')};
     if (await run(() => save('sched', r), 'บันทึกแล้ว')) { dlg.close(); render(); }
   },
   roster: async f => {
@@ -343,11 +356,5 @@ document.addEventListener('submit', e => { const f = e.target.dataset.f; if (!f)
 
 if (S) { render(); refresh(); } else render();
 </script>
-<footer style="text-align: center; padding: 24px 16px; margin-top: 32px; color: #64748b; font-size: 13px; border-top: 1px solid #e2e8f0; line-height: 1.6;">
-  พัฒนาโดย: <strong>นางสาวฮานีดา เมาะมิง</strong> <br> ตำแหน่งศึกษานิเทศก์ วิทยฐานะศึกษานิเทศก์ชำนาญการพิเศษ <br>
-  กลุ่มงานพัฒนาคุณภาพและมาตรฐานการศึกษา สำนักงานการศึกษาเอกชนจังหวัดนราธิวาส
-</footer>
-</footer>
-
 </body>
 </html>
