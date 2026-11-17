@@ -61,7 +61,22 @@ dialog::backdrop{background:#0a3f4ca0}
 .seg button.on{background:var(--sea);color:#fff}
 .cm{border-left:3px solid var(--line);padding:2px 10px;margin:6px 0 6px 6px;font-size:15px}
 footer{text-align:center;padding:24px 16px;margin-top:16px;color:#64748b;font-size:13px;border-top:1px solid #e2e8f0;line-height:1.6}
-@media print{header,nav,footer,.noprint,#toast{display:none!important}body{background:#fff}body:has(dialog[open]) #app{display:none}dialog{box-shadow:none;width:100%;max-height:none}dialog::backdrop{display:none}main{padding:0}}
+.hero{display:flex;gap:16px;align-items:center;background:linear-gradient(135deg,#fff7df,#e3f1f2);border:2px solid var(--sun);border-radius:14px;padding:14px 18px;margin:12px 0}
+.hero .em{font-size:44px;line-height:1}
+.hero .stars{color:var(--sun);font-size:26px;letter-spacing:3px;line-height:1.2}
+.chips{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin:10px 0}
+.chip{border-radius:12px;padding:10px 14px;font-size:15px}
+.chip.up{background:#dcefe3;border:1px solid #a9d3b8}.chip.go{background:#fbecc6;border:1px solid #ecce80}
+.charts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;align-items:start}
+.nb{break-inside:avoid;page-break-inside:avoid}
+.sigs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;margin-top:26px;break-inside:avoid;page-break-inside:avoid}
+.sig{text-align:center;font-size:14px;line-height:1.5}
+.sig .box{height:72px;display:flex;align-items:flex-end;justify-content:center;border-bottom:1px dotted #444;margin-bottom:4px}
+.sig img{max-height:68px;max-width:100%}
+.pad{display:block;width:100%;aspect-ratio:3/1;border:1px dashed var(--sea);border-radius:8px;background:#fff;touch-action:none;cursor:crosshair}
+.padbox{border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px}
+@page{size:A4;margin:14mm}
+@media print{*{-webkit-print-color-adjust:exact;print-color-adjust:exact}tr{break-inside:avoid}header,nav,footer,.noprint,#toast{display:none!important}body{background:#fff}body:has(dialog[open]) #app{display:none}dialog{position:static!important;inset:auto!important;margin:0!important;box-shadow:none;width:100%;max-width:none;height:auto;max-height:none;overflow:visible;padding:0}dialog::backdrop{display:none}main{padding:0}}
 @media (prefers-reduced-motion:no-preference){#toast{transition:opacity .2s}}
 </style>
 </head>
@@ -85,6 +100,7 @@ const RUBRIC = [
  'ลำดับความคิดและประเด็นการเรียนรู้ เพื่อนำไปสู่ข้อสรุปทั้งหมดของคาบเรียนโดยสอดคล้องกับจุดประสงค์การเรียนรู้ในแผนการจัดการเรียนรู้',
  'เชื่อมโยงความคิดเห็นของนักเรียนสู่การสรุปแนวคิดหลักของบทเรียน',
  'วัดและประเมินผลการคิดขั้นสูงอย่างเหมาะสม มีเครื่องมือและเกณฑ์การวัดผลที่สอดคล้องกับจุดประสงค์การเรียนรู้'];
+const SHORT = ['เกริ่นนำและเป้าหมาย','ตั้งคำถามกระตุ้นคิด','กิจกรรมลงมือคิด','เปิดโอกาสแสดงความคิดเห็น','ฟัง สรุป สะท้อนคิด','ลำดับความคิดสู่ข้อสรุป','เชื่อมโยงสู่แนวคิดหลัก','วัดผลการคิดขั้นสูง'];
 const PHASE = ['ก่อนสังเกตการสอน','สังเกตการสอน','สะท้อนผลและโค้ช'];
 let GAS = localStorage.getItem('gas') || DEFAULT_GAS_URL;
 let S = JSON.parse(sessionStorage.getItem('s') || 'null'), D = {}, tab = '', q = '';
@@ -201,7 +217,7 @@ function obsForm(r = {}) {
   <div><label>ระดับชั้น</label><input name="grade" value="${esc(r.grade)}"></div>
   <div><label>ช่วงการนิเทศ</label><select name="phase">${PHASE.map(p => `<option ${r.phase === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
   <div><label>เรื่อง / หน่วยการเรียนรู้</label><input name="topic" value="${esc(r.topic)}"></div></div>
-  <h3>ประเมินการจัดการเรียนรู้ (1 = ควรปรับปรุง … 4 = ดีเยี่ยม)</h3>
+  <h3>ประเมินการจัดการเรียนรู้เชิง HOTS (1 = ควรปรับปรุง … 4 = ดีเยี่ยม)</h3>
   ${RUBRIC.map((t, i) => `<div class="rub"><span>${i + 1}. ${t}</span><span class="opt">${[1,2,3,4].map(n => `<label><input type="radio" name="s${i}" value="${n}" ${sc[i] === n ? 'checked' : ''}>${n}</label>`).join('')}</span></div>`).join('')}
   <h3>การโค้ช (GROW)</h3>
   <label>จุดเด่นที่พบ</label><textarea name="strengths">${esc(r.strengths)}</textarea>
@@ -211,15 +227,83 @@ function obsForm(r = {}) {
   <label>ข้อตกลงที่จะทำ (Will)</label><textarea name="will">${esc(r.will)}</textarea>
   <div class="g2"><div><label>นัดติดตามครั้งถัดไป</label><input type="date" name="next" value="${r.next || ''}"></div>
   <div><label>การส่งผลให้ครู</label><select name="ret"><option value="0">ยังไม่ส่ง (ร่าง)</option><option value="1" ${r.ret ? 'selected' : ''}>ส่งคืนครูให้เห็นผล</option></select></div></div>
+  <h3>ลงชื่อรับรอง</h3>
+  <p class="mute">เซ็นบนหน้าจอด้วยนิ้วหรือเมาส์ได้เลย หรือเว้นว่างไว้แล้วเซ็นสดบนกระดาษหลังพิมพ์ (ลายมือชื่อจะแสดงในรายงานที่พิมพ์)</p>
+  <div class="g2">
+   <div class="padbox"><b>ผู้นิเทศ</b><label>ชื่อ-สกุล</label><input name="supName" value="${esc(r.supName || localStorage.getItem('supName') || '')}"><canvas class="pad" data-k="sup" width="450" height="150" aria-label="ลายมือชื่อผู้นิเทศ"></canvas><button type="button" class="btn alt sm" data-a="clrpad" data-k="sup" style="margin-top:6px">ล้างลายมือชื่อ</button></div>
+   <div class="padbox"><b>ผู้รับการนิเทศ (ครู)</b><div class="mute">ชื่อ: ใช้ชื่อครูที่เลือกด้านบน</div><canvas class="pad" data-k="teacher" width="450" height="150" aria-label="ลายมือชื่อผู้รับการนิเทศ"></canvas><button type="button" class="btn alt sm" data-a="clrpad" data-k="teacher" style="margin-top:6px">ล้างลายมือชื่อ</button></div>
+   <div class="padbox"><b>ผู้อำนวยการโรงเรียน</b><label>ชื่อ-สกุล</label><input name="headName" value="${esc(r.headName)}"><canvas class="pad" data-k="head" width="450" height="150" aria-label="ลายมือชื่อผู้อำนวยการโรงเรียน"></canvas><button type="button" class="btn alt sm" data-a="clrpad" data-k="head" style="margin-top:6px">ล้างลายมือชื่อ</button></div>
+  </div>
   <div class="row" style="margin-top:16px"><button class="btn">บันทึก</button><button type="button" class="btn alt" data-a="close">ยกเลิก</button></div></form>`;
 }
+/* ---------- ส่วนประกอบรายงาน (กราฟ/กำลังใจ/ลายมือชื่อ) ---------- */
+const f1 = x => x.toFixed(1);
+function radarSVG(sc) {
+  const cx = 170, cy = 150, R = 100, n = sc.length, ang = i => -Math.PI / 2 + i * 2 * Math.PI / n;
+  const P = (i, v) => [cx + R * v / 4 * Math.cos(ang(i)), cy + R * v / 4 * Math.sin(ang(i))];
+  const ring = v => `<polygon points="${sc.map((_, i) => P(i, v).map(f1).join(',')).join(' ')}" fill="none" stroke="#c5d4d7"/>`;
+  const lab = sc.map((_, i) => { const [x, y] = P(i, 4.6); return `<text x="${f1(x)}" y="${f1(y)}" text-anchor="middle" dominant-baseline="middle" font-size="13" font-weight="600" fill="#0a3f4c">${i + 1}</text>`; }).join('');
+  const ax = sc.map((_, i) => { const [x, y] = P(i, 4); return `<line x1="${cx}" y1="${cy}" x2="${f1(x)}" y2="${f1(y)}" stroke="#d3dfe1"/>`; }).join('');
+  const pts = sc.map((v, i) => P(i, v || 0));
+  return `<svg viewBox="0 0 340 300" role="img" aria-label="กราฟเรดาร์คะแนนรายข้อ" style="width:100%;max-width:340px">${[1,2,3,4].map(ring).join('')}${ax}
+   <polygon points="${pts.map(a => a.map(f1).join(',')).join(' ')}" fill="#0e5a6b" fill-opacity=".25" stroke="#0e5a6b" stroke-width="2.5"/>
+   ${pts.map(a => `<circle cx="${f1(a[0])}" cy="${f1(a[1])}" r="4" fill="#e8a317" stroke="#0a3f4c"/>`).join('')}${lab}</svg>`;
+}
+function trendSVG(pts) {
+  const W = 420, H = 160, l = 34, rr = 34, t = 20, b = 30, n = pts.length;
+  const X = i => l + (n === 1 ? (W - l - rr) / 2 : i * (W - l - rr) / (n - 1)), Y = v => t + (4 - v) / 3 * (H - t - b);
+  const grid = [1,2,3,4].map(v => `<line x1="${l}" x2="${W - rr}" y1="${f1(Y(v))}" y2="${f1(Y(v))}" stroke="#d3dfe1"/><text x="${l - 8}" y="${f1(Y(v))}" text-anchor="end" dominant-baseline="middle" font-size="11" fill="#5b727a">${v}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="กราฟพัฒนาการคะแนนเฉลี่ย" style="width:100%">${grid}
+   <polyline points="${pts.map((p, i) => f1(X(i)) + ',' + f1(Y(p.a))).join(' ')}" fill="none" stroke="#0e5a6b" stroke-width="3" stroke-linejoin="round"/>
+   ${pts.map((p, i) => `<circle cx="${f1(X(i))}" cy="${f1(Y(p.a))}" r="5" fill="#e8a317" stroke="#0a3f4c" stroke-width="1.5"/><text x="${f1(X(i))}" y="${f1(Y(p.a) - 10)}" text-anchor="middle" font-size="11" font-weight="700" fill="#0a3f4c">${p.a.toFixed(2)}</text><text x="${f1(X(i))}" y="${H - 8}" text-anchor="middle" font-size="10" fill="#5b727a">${esc(fd(p.d))}</text>`).join('')}</svg>`;
+}
+const barOf = v => `<div class="bar" style="height:12px"><i style="width:${v / 4 * 100}%;background:${v >= 3 ? 'var(--ok)' : v === 2 ? 'var(--sun)' : 'var(--bad)'}"></i></div>`;
+function cheer(a) {
+  return a >= 3.5 ? ['🌟', 'ยอดเยี่ยมมาก! การจัดการเรียนรู้ของคุณครูเป็นแบบอย่างที่ดี ขอบคุณที่ทุ่มเทเพื่อผู้เรียนเสมอมา']
+    : a >= 2.5 ? ['👏', 'ทำได้ดีมาก! คุณครูอยู่บนเส้นทางที่ถูกต้องแล้ว อีกเพียงก้าวเดียวก็ถึงระดับดีเยี่ยม']
+    : a >= 1.5 ? ['💪', 'มีพื้นฐานที่ดีแล้ว! ทุกก้าวเล็ก ๆ คือการเติบโต เราจะเดินไปด้วยกัน']
+    : ['🌱', 'ทุกการเริ่มต้นมีคุณค่า! ขอบคุณที่เปิดห้องเรียนเพื่อเรียนรู้ร่วมกัน ศน. พร้อมเป็นเพื่อนร่วมทางของคุณครู'];
+}
+function sigBlock(img, name, role) {
+  return `<div class="sig"><div class="box">${img ? `<img src="${esc(img)}" alt="ลายมือชื่อ">` : ''}</div>
+   <div>ลงชื่อ ${img ? '' : '.............................................'}</div><div>(${name ? esc(name) : '.............................................'})</div><div><b>${role}</b></div></div>`;
+}
 function obsView(r) {
+  const sc = r.scores || [], avg = r._avg || 0, [em, msg] = cheer(avg), st = Math.max(0, Math.min(4, Math.round(avg)));
+  const series = L('obs').filter(x => (x.tuid && x.tuid === r.tuid) || String(x.teacher || '').trim() === String(r.teacher || '').trim())
+    .filter(x => (x.date || '') <= (r.date || '')).sort((a, b) => (a.date || '').localeCompare(b.date || '')).slice(-6).map(x => ({d: x.date, a: x._avg || 0, id: x.id}));
+  const prev = series.length > 1 ? series[series.length - 2] : null, dl = prev ? avg - prev.a : 0;
+  const trendMsg = !prev ? '🚀 นี่คือจุดเริ่มต้นของการพัฒนา เราจะติดตามความก้าวหน้าไปด้วยกัน'
+    : dl > 0.004 ? `📈 พัฒนาขึ้น +${dl.toFixed(2)} จากครั้งก่อน เยี่ยมมาก! ขอชื่นชมความตั้งใจ`
+    : dl < -0.004 ? `🤝 ครั้งนี้ต่างจากครั้งก่อน ${dl.toFixed(2)} ไม่เป็นไร เรามาวางแผนปรับไปด้วยกัน`
+    : '✅ คะแนนเท่าเดิม รักษามาตรฐานได้ดี ลองท้าทายตัวเองต่ออีกหนึ่งข้อ';
+  const mx = sc.length ? Math.max(...sc) : 0, mn = sc.length ? Math.min(...sc) : 0;
+  const idx = v => sc.map((x, i) => x === v ? i : -1).filter(i => i >= 0).slice(0, 3);
+  const names = a => a.map(i => `ข้อ ${i + 1} ${SHORT[i]}`).join(' · ');
   return `<div class="noprint row" style="margin-bottom:8px"><button class="btn" data-a="print">พิมพ์ / บันทึก PDF</button><button class="btn alt" data-a="close">ปิด</button></div>
-  <h2>รายงานผลการนิเทศ</h2><p>ครู: <b>${esc(r.teacher)}</b> · ${esc(r.school)}<br>วิชา: ${esc(r.subject)} ${esc(r.grade)} · เรื่อง: ${esc(r.topic) || '-'}<br>วันที่ ${fd(r.date)} · ${esc(r.phase)}</p>
-  <div class="stats"><div class="stat"><b>${(r._avg || 0).toFixed(2)}</b>คะแนนเฉลี่ย ${lvl(r._avg || 0)[0]}</div></div>
-  <table>${RUBRIC.map((t, i) => `<tr><td>${i + 1}. ${t}</td><td><b>${(r.scores || [])[i] || '-'}</b></td></tr>`).join('')}</table>
+  <div class="mute" style="text-align:center">สำนักงานการศึกษาเอกชนจังหวัดนราธิวาส</div>
+  <h2 style="text-align:center">รายงานผลการนิเทศ HOTS</h2><p>ครู: <b>${esc(r.teacher)}</b> · ${esc(r.school)}<br>วิชา: ${esc(r.subject)} ${esc(r.grade)} · เรื่อง: ${esc(r.topic) || '-'}<br>วันที่ ${fd(r.date)} · ${esc(r.phase)}</p>
+  <div class="hero nb"><div class="em">${em}</div><div><div class="stars" aria-label="${st} จาก 4 ดาว">${'★'.repeat(st)}${'☆'.repeat(4 - st)}</div><b>${avg.toFixed(2)} / 4 · ${lvl(avg)[0]}</b><div>${msg}</div></div></div>
+  <div class="charts nb"><div><h3 style="margin-top:0">ภาพรวมรายข้อ</h3>${radarSVG(sc)}</div>
+   <div><h3 style="margin-top:0">พัฒนาการคะแนนเฉลี่ย</h3>${trendSVG(series)}<div class="chip up" style="margin-top:6px">${trendMsg}</div></div></div>
+  <div class="chips nb">${sc.length ? `<div class="chip up">⭐ <b>จุดแข็งที่โดดเด่น</b><br>${names(idx(mx))}</div>` : ''}${sc.length && mn < mx ? `<div class="chip go">🎯 <b>โอกาสพัฒนาต่อ</b><br>${names(idx(mn))}</div>` : ''}</div>
+  <table>${RUBRIC.map((t, i) => `<tr><td>${i + 1}. ${t}</td><td style="width:130px">${barOf(sc[i] || 0)}</td><td style="width:30px"><b>${sc[i] || '-'}</b></td></tr>`).join('')}</table>
   ${[['strengths','จุดเด่น'],['goal','เป้าหมาย (Goal)'],['reality','สภาพที่เป็นอยู่ (Reality)'],['options','แนวทางพัฒนา (Options)'],['will','ข้อตกลง (Will)']].map(([k, t]) => r[k] ? `<h3>${t}</h3><p>${nl(r[k])}</p>` : '').join('')}
-  ${r.next ? `<p><b>นัดติดตาม:</b> ${fd(r.next)}</p>` : ''}`;
+  ${r.next ? `<p><b>นัดติดตาม:</b> ${fd(r.next)}</p>` : ''}
+  <p style="text-align:center;margin:18px 0 0">💛 ขอบคุณคุณครูที่ร่วมพัฒนาการเรียนรู้ของผู้เรียนด้วยกัน 💛</p>
+  <div class="sigs">${sigBlock((r.sig || {}).sup, r.supName, 'ผู้นิเทศ')}${sigBlock((r.sig || {}).teacher, r.teacher, 'ผู้รับการนิเทศ')}${sigBlock((r.sig || {}).head, r.headName, 'ผู้อำนวยการ' + (r.school ? esc(r.school) : 'โรงเรียน'))}</div>
+  <p class="mute" style="text-align:center;margin-top:14px">วันที่ ${fd(r.date)}</p>`;
+}
+function initPads(r = {}) {
+  dlg.querySelectorAll('canvas.pad').forEach(c => {
+    const g = c.getContext('2d'); g.lineWidth = 3; g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#0a2a5e';
+    const k = c.dataset.k; let down = false;
+    const pt = e => { const b = c.getBoundingClientRect(); return [(e.clientX - b.left) * c.width / b.width, (e.clientY - b.top) * c.height / b.height]; };
+    if (r.sig && r.sig[k]) { const im = new Image(); im.onload = () => { g.drawImage(im, 0, 0, c.width, c.height); c.dataset.has = '1'; }; im.src = r.sig[k]; }
+    c.addEventListener('pointerdown', e => { e.preventDefault(); c.setPointerCapture(e.pointerId); down = true; const [x, y] = pt(e); g.beginPath(); g.moveTo(x, y); g.lineTo(x + .1, y + .1); g.stroke(); c.dataset.has = '1'; });
+    c.addEventListener('pointermove', e => { if (!down) return; const [x, y] = pt(e); g.lineTo(x, y); g.stroke(); });
+    ['pointerup', 'pointercancel'].forEach(t => c.addEventListener(t, () => { down = false; }));
+  });
 }
 
 /* ---------- นัดโค้ช ---------- */
@@ -243,14 +327,14 @@ function schForm(r = {}) {
 /* ---------- รายชื่อครู ---------- */
 function roster() {
   const T = L('roster');
-  return `<h2>รายชื่อครู</h2><div class="row noprint" style="margin-bottom:12px"><span class="mute sp">ครูใช้ชื่อ-นามสกุล และรหัสผ่านที่กำหนดไว้เพื่อเข้าสู่ระบบ</span><button class="btn" data-a="nros">+ เพิ่มครู</button></div>
-  ${T.length ? `<div class="card wrap"><table><tr><th>ชื่อ-สกุล</th><th>โรงเรียน</th><th>วิชา</th><th>รหัสผ่าน</th><th></th></tr>${T.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.school)}</td><td>${esc(t.subject)}</td><td>${esc(t.pin)}</td>
+  return `<h2>รายชื่อครู</h2><div class="row noprint" style="margin-bottom:12px"><span class="mute sp">ครูใช้ชื่อ-นามสกุล และรหัสผ่านที่ ศน. กำหนดเพื่อเข้าสู่ระบบ (ระบบไม่แสดงรหัสเดิม ตั้งใหม่ได้ที่ปุ่มแก้ไข)</span><button class="btn" data-a="nros">+ เพิ่มครู</button></div>
+  ${T.length ? `<div class="card wrap"><table><tr><th>ชื่อ-สกุล</th><th>โรงเรียน</th><th>วิชา</th><th>รหัสผ่าน</th><th></th></tr>${T.map(t => `<tr><td>${esc(t.name)}</td><td>${esc(t.school)}</td><td>${esc(t.subject)}</td><td>${t.hasPin ? '<span class="tag ok">ตั้งแล้ว</span>' : '<span class="tag warn">ยังไม่ตั้ง</span>'}</td>
    <td><div class="row"><button class="btn alt sm" data-a="eros" data-id="${t.id}">แก้ไข</button><button class="btn bad sm" data-a="dros" data-id="${t.id}">ลบ</button></div></td></tr>`).join('')}</table></div>` : '<div class="empty">ยังไม่มีรายชื่อครู กด “+ เพิ่มครู”</div>'}`;
 }
 function rosForm(r = {}) {
   return `<form data-f="roster"><h2>${r.id ? 'แก้ไข' : 'เพิ่ม'}ครู</h2><input type="hidden" name="id" value="${esc(r.id)}">
   <label>ชื่อ-สกุล</label><input name="name" value="${esc(r.name)}" required><label>โรงเรียน</label><input name="school" value="${esc(r.school)}" required>
-  <label>วิชา / กลุ่มสาระ</label><input name="subject" value="${esc(r.subject)}"><label>รหัสผ่านเพื่อเข้าสู่ระบบ (อย่างน้อย 4 หลัก)</label><input name="pin" value="${esc(r.pin)}" minlength="4" required>
+  <label>วิชา / กลุ่มสาระ</label><input name="subject" value="${esc(r.subject)}"><label>${r.id ? 'ตั้งรหัสผ่านใหม่ (เว้นว่างถ้าไม่ต้องการเปลี่ยน)' : 'รหัสผ่านเพื่อเข้าสู่ระบบ (อย่างน้อย 4 ตัวอักษร)'}</label><input name="pin" type="password" autocomplete="new-password" minlength="4" ${r.id && r.hasPin ? '' : 'required'}>
   <div class="row" style="margin-top:16px"><button class="btn">บันทึก</button><button type="button" class="btn alt" data-a="close">ยกเลิก</button></div></form>`;
 }
 
@@ -299,7 +383,8 @@ const A = {
   logout: async () => { try { await api({action:'logout'}); } catch (e) {} S = null; D = {}; sessionStorage.removeItem('s'); render(); },
   close: () => dlg.close(),
   print: () => window.print(),
-  nobs: () => open(obsForm()), eobs: el => open(obsForm(find('obs', el.dataset.id))), vobs: el => open(obsView(find('obs', el.dataset.id))),
+  nobs: () => { open(obsForm()); initPads(); }, eobs: el => { const o = find('obs', el.dataset.id); open(obsForm(o)); initPads(o); },
+  clrpad: el => { const c = dlg.querySelector('canvas[data-k="' + el.dataset.k + '"]'); if (c) { c.getContext('2d').clearRect(0, 0, c.width, c.height); c.dataset.has = ''; } }, vobs: el => open(obsView(find('obs', el.dataset.id))),
   ret: async el => { const r = find('obs', el.dataset.id); if (await run(() => save('obs', {...r, ret: !r.ret}), r.ret ? 'ถอนคืนแล้ว' : 'ส่งผลคืนครูแล้ว')) render(); },
   dobs: async el => { if (confirm('ลบบันทึกนี้?') && await run(() => del('obs', el.dataset.id), 'ลบแล้ว')) render(); },
   nsch: () => open(schForm()), esch: el => open(schForm(find('sched', el.dataset.id))),
@@ -335,6 +420,10 @@ const F = {
     if (scores.some(x => !x)) return toast('กรุณาประเมินให้ครบทุกข้อ', true);
     const r = {...old, id: f.get('id') || undefined, tuid: t.id, teacher: t.name, school: t.school, date: f.get('date'), subject: f.get('subject'), grade: f.get('grade'), phase: f.get('phase'), topic: f.get('topic'),
       scores, _avg: c.avg, strengths: f.get('strengths'), goal: f.get('goal'), reality: f.get('reality'), options: f.get('options'), will: f.get('will'), next: f.get('next'), ret: f.get('ret') === '1'};
+    const sig = {}; form.querySelectorAll('canvas.pad').forEach(c => { if (c.dataset.has === '1') sig[c.dataset.k] = c.toDataURL('image/png'); });
+    r.sig = sig; r.supName = (f.get('supName') || '').trim(); r.headName = (f.get('headName') || '').trim();
+    try { localStorage.setItem('supName', r.supName); } catch (e) {}
+    if (JSON.stringify(r).length > 45000) return toast('ลายมือชื่อมีขนาดใหญ่เกินไป กรุณาล้างแล้วเซ็นใหม่ให้เส้นสั้นลง', true);
     if (await run(() => save('obs', r), 'บันทึกแล้ว')) { dlg.close(); render(); }
   },
   sched: async f => {
@@ -345,6 +434,7 @@ const F = {
   },
   roster: async f => {
     const r = {id: f.get('id') || undefined, name: f.get('name').trim(), school: f.get('school').trim(), subject: f.get('subject'), pin: f.get('pin').trim()};
+    if (!r.pin) delete r.pin; // เว้นว่าง = ไม่เปลี่ยนรหัส (เซิร์ฟเวอร์เก็บแฮชเดิมไว้)
     if (L('roster').some(x => x.name === r.name && x.id !== r.id)) return toast('มีชื่อนี้อยู่แล้ว', true);
     if (await run(() => save('roster', r), 'บันทึกแล้ว')) { dlg.close(); render(); }
   },
