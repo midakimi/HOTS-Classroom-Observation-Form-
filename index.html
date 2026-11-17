@@ -201,7 +201,7 @@ function obsForm(r = {}) {
   <div><label>ระดับชั้น</label><input name="grade" value="${esc(r.grade)}"></div>
   <div><label>ช่วงการนิเทศ</label><select name="phase">${PHASE.map(p => `<option ${r.phase === p ? 'selected' : ''}>${p}</option>`).join('')}</select></div>
   <div><label>เรื่อง / หน่วยการเรียนรู้</label><input name="topic" value="${esc(r.topic)}"></div></div>
-  <h3>ประเมินการจัดการเรียนรู้เชิง HOTS (1 = ควรปรับปรุง … 4 = ดีเยี่ยม)</h3>
+  <h3>ประเมินการจัดการเรียนรู้ (1 = ควรปรับปรุง … 4 = ดีเยี่ยม)</h3>
   ${RUBRIC.map((t, i) => `<div class="rub"><span>${i + 1}. ${t}</span><span class="opt">${[1,2,3,4].map(n => `<label><input type="radio" name="s${i}" value="${n}" ${sc[i] === n ? 'checked' : ''}>${n}</label>`).join('')}</span></div>`).join('')}
   <h3>การโค้ช (GROW)</h3>
   <label>จุดเด่นที่พบ</label><textarea name="strengths">${esc(r.strengths)}</textarea>
@@ -215,7 +215,7 @@ function obsForm(r = {}) {
 }
 function obsView(r) {
   return `<div class="noprint row" style="margin-bottom:8px"><button class="btn" data-a="print">พิมพ์ / บันทึก PDF</button><button class="btn alt" data-a="close">ปิด</button></div>
-  <h2>รายงานผลการนิเทศ HOTS</h2><p>ครู: <b>${esc(r.teacher)}</b> · ${esc(r.school)}<br>วิชา: ${esc(r.subject)} ${esc(r.grade)} · เรื่อง: ${esc(r.topic) || '-'}<br>วันที่ ${fd(r.date)} · ${esc(r.phase)}</p>
+  <h2>รายงานผลการนิเทศ</h2><p>ครู: <b>${esc(r.teacher)}</b> · ${esc(r.school)}<br>วิชา: ${esc(r.subject)} ${esc(r.grade)} · เรื่อง: ${esc(r.topic) || '-'}<br>วันที่ ${fd(r.date)} · ${esc(r.phase)}</p>
   <div class="stats"><div class="stat"><b>${(r._avg || 0).toFixed(2)}</b>คะแนนเฉลี่ย ${lvl(r._avg || 0)[0]}</div></div>
   <table>${RUBRIC.map((t, i) => `<tr><td>${i + 1}. ${t}</td><td><b>${(r.scores || [])[i] || '-'}</b></td></tr>`).join('')}</table>
   ${[['strengths','จุดเด่น'],['goal','เป้าหมาย (Goal)'],['reality','สภาพที่เป็นอยู่ (Reality)'],['options','แนวทางพัฒนา (Options)'],['will','ข้อตกลง (Will)']].map(([k, t]) => r[k] ? `<h3>${t}</h3><p>${nl(r[k])}</p>` : '').join('')}
