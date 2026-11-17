@@ -306,7 +306,7 @@ const A = {
   nev: () => open(evForm()),
   dev: async el => { const c = 'evid/' + el.dataset.t + '/items'; if (confirm('ลบหลักฐานนี้?') && await run(() => del(c, el.dataset.id), 'ลบแล้ว')) render(); },
   csv: () => {
-    const h = ['วันที่','ครู','โรงเรียน','วิชา','ช่วง','คะแนนเฉลี่ย','% คำถามขั้นสูง','ส่งคืนครู'];
+    const h = ['วันที่','ครู','โรงเรียน','วิชา','ช่วง','คะแนนเฉลี่ย','ส่งคืนครู'];
     const rows = L('obs').map(r => [r.date, r.teacher, r.school, r.subject, r.phase, r._avg, r._hq, r.ret ? 'ใช่' : 'ไม่']);
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(['\ufeff' + [h, ...rows].map(r => r.map(csvEsc).join(',')).join('\n')], {type:'text/csv'}));
     a.download = 'สรุปนิเทศ-' + today() + '.csv'; a.click();
